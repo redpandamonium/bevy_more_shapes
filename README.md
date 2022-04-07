@@ -6,7 +6,17 @@ To run the example showcasing all the available shapes, run `cargo run --example
 
 ## Features
 
+* Cones
 
+Planned: 
+
+* Torus
+* Cylinder
+
+## Known issues
+
+The demo's camera sometimes jumps when you start moving the mouse because the first movement delta is sometimes huge. 
+This is an issue with the camera plugin used.
 
 ## Contributing
 

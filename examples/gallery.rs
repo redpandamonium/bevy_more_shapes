@@ -12,6 +12,7 @@ use bevy::render::primitives::Sphere;
 use bevy::text::{Text, Text2dBundle, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
+use bevy_flycam::FlyCam;
 use bevy_more_shapes::Cone;
 
 fn spawn_shapes(
@@ -28,7 +29,7 @@ fn spawn_shapes(
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(Color::GOLD)),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        transform: Transform::from_xyz(0.0, 0.0, 5.0),
         ..Default::default()
     });
 
@@ -90,6 +91,16 @@ fn toggle_wireframe_system(
     }
 }
 
+// The camera plugin places the camera with a strange transform. We center it at the origin looking along the Z axis.
+fn fix_initial_camera_position(mut query: Query<&mut Transform, With<FlyCam>>) {
+    let new_xform = Transform::from_xyz(0.0, 0.0, 0.0).looking_at(Vec3::new(0.0, 0.0, 1.0), Vec3::Y);
+    for mut xform in query.iter_mut() {
+        xform.rotation = new_xform.rotation;
+        xform.translation = new_xform.translation;
+        xform.scale = new_xform.scale;
+    }
+}
+
 fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
@@ -102,6 +113,7 @@ fn main() {
         .add_plugin(WireframePlugin)
         .add_startup_system(spawn_shapes)
         .add_startup_system(spawn_info_text)
+        .add_startup_system_to_stage(StartupStage::PostStartup, fix_initial_camera_position)
         .add_system(toggle_wireframe_system)
         .run();
 }
