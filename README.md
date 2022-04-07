@@ -1,6 +1,6 @@
 # bevy_more_shapes
 More shapes for the bevy game engine. This plugin adds more procedural geometry shapes for bevy.
-It works exactly like the default bevy shapes.
+It works exactly like the default bevy shapes. It is compatible with versions 0.6 of bevy.
 
 To run the example showcasing all the available shapes, run `cargo run --example gallery`.
 
