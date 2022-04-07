@@ -13,7 +13,8 @@ use bevy::text::{Text, Text2dBundle, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
 use bevy_flycam::FlyCam;
-use bevy_more_shapes::Cone;
+use bevy_more_shapes::{Cone, Cylinder};
+use crate::CursorIcon::Default;
 
 fn spawn_shapes(
     mut commands: Commands,
@@ -30,6 +31,35 @@ fn spawn_shapes(
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(Color::GOLD)),
         transform: Transform::from_xyz(0.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
+    // Default cylinder
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cylinder::default())),
+        material: materials.add(StandardMaterial::from(Color::CRIMSON)),
+        transform: Transform::from_xyz(2.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
+    // Taller regular cylinder
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cylinder::new_regular(2.2, 0.5, 16))),
+        material: materials.add(StandardMaterial::from(Color::FUCHSIA)),
+        transform: Transform::from_xyz(2.0, 0.0, 7.0),
+        ..Default::default()
+    });
+
+    // Irregular cylinder
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cylinder {
+            height: 1.0,
+            radius_bottom: 0.6,
+            radius_top: 0.2,
+            subdivisions: 40,
+        })),
+        material: materials.add(StandardMaterial::from(Color::ORANGE_RED)),
+        transform: Transform::from_xyz(2.0, 0.0, 9.0),
         ..Default::default()
     });
 
