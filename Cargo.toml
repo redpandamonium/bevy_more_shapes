@@ -2,6 +2,13 @@
 name = "bevy_more_shapes"
 version = "0.1.0"
 edition = "2021"
+authors = ["Leon Suchy"]
+license = "MIT OR Apache-2.0"
+description = "Bevy engine plugin that adds additional shapes to the existing collection of procedurally generated geometry."
+readme = "README.md"
+keywords = ["gamedev", "graphics", "bevy", "geometry", "shapes"]
+categories = ["graphics", "game-development"]
+repository = "https://github.com/redpandamonium/bevy_more_shapes"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
