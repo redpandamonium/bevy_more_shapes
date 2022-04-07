@@ -1,3 +1,6 @@
+use bevy::math::Vec3;
+use bevy::render::mesh::{Indices, Mesh};
+use bevy::render::render_resource::PrimitiveTopology;
 
 // From https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/
 
@@ -11,7 +14,7 @@ pub struct Cone {
 impl Default for Cone {
     fn default() -> Self {
         Cone {
-            radius: 1.0,
+            radius: 0.5,
             height: 1.0,
             subdivisions: 32,
         }
