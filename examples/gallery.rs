@@ -2,19 +2,17 @@ use bevy::prelude::*;
 use bevy::app::App;
 use bevy::asset::{AssetServer, Assets};
 use bevy::input::Input;
-use bevy::math::{Quat, Rect, Vec3};
+use bevy::math::{Rect, Vec3};
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::pbr::{AmbientLight, DirectionalLight, PbrBundle, StandardMaterial};
-use bevy::render::mesh::shape::Icosphere;
 use bevy::render::options::WgpuFeatures;
 use bevy::render::options::WgpuOptions;
-use bevy::render::primitives::Sphere;
 use bevy::text::{Text, Text2dBundle, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
 use bevy_flycam::FlyCam;
 use bevy_more_shapes::{Cone, Cylinder};
-use crate::CursorIcon::Default;
+use bevy::render::mesh::shape::Quad;
 
 fn spawn_shapes(
     mut commands: Commands,
@@ -31,6 +29,19 @@ fn spawn_shapes(
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(Color::GOLD)),
         transform: Transform::from_xyz(0.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
+    // Tiny cylinder
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cylinder {
+            height: 1.0,
+            radius_bottom: 0.5,
+            radius_top: 0.5,
+            subdivisions: 3,
+        })),
+        material: materials.add(StandardMaterial::from(Color::OLIVE)),
+        transform: Transform::from_xyz(2.0, 0.0, 11.0),
         ..Default::default()
     });
 
