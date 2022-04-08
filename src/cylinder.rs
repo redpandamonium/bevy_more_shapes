@@ -205,10 +205,17 @@ impl From<Cylinder> for Mesh {
                     VertexPass::BottomRing => 0.0,
                 };
 
+                let radius = match pass {
+                    VertexPass::Top => cylinder.radius_top,
+                    VertexPass::Bottom => cylinder.radius_bottom,
+                    VertexPass::TopRing => cylinder.radius_top,
+                    VertexPass::BottomRing => cylinder.radius_bottom,
+                };
+
                 let position = Vec3::new(
-                    cylinder.radius_top * f32::cos(theta),
+                    radius * f32::cos(theta),
                     height,
-                    cylinder.radius_top * f32::sin(theta),
+                    radius * f32::sin(theta),
                 );
 
                 let normal = match pass {
