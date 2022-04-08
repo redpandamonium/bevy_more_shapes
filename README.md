@@ -9,11 +9,13 @@ This crate tracks bevy's versions, meaning the API of this crate will only break
 ## Features
 
 * Cones
+* Cylinders
 
 Planned, coming soon: 
 
 * Torus
-* Cylinder
+* Grid plane (subdivided quad)
+* Regular polygons
 
 ## Known issues
 
@@ -22,4 +24,4 @@ This is an issue with the camera plugin used.
 
 ## Contributing
 
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as stated in the LICENSE file, without any additional terms or conditions.
