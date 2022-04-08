@@ -13,6 +13,7 @@ use bevy::DefaultPlugins;
 use bevy_flycam::FlyCam;
 use bevy_more_shapes::{Cone, Cylinder};
 use bevy::render::mesh::shape::Quad;
+use bevy::render::render_resource::Texture;
 
 fn spawn_shapes(
     mut commands: Commands,
@@ -20,7 +21,10 @@ fn spawn_shapes(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut wireframe_config: ResMut<WireframeConfig>,
     mut ambient_light: ResMut<AmbientLight>,
+    asset_server: Res<AssetServer>
 ) {
+    let checkerboard_texture = asset_server.load("textures/checkerboard_1024x1024.png");
+
     // Start out without wireframes, but you can toggle them.
     wireframe_config.global = false;
 
@@ -71,6 +75,14 @@ fn spawn_shapes(
         })),
         material: materials.add(StandardMaterial::from(Color::ORANGE_RED)),
         transform: Transform::from_xyz(2.0, 0.0, 9.0),
+        ..Default::default()
+    });
+
+    // Textured cylinder
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cylinder::default())),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(2.0, 0.0, 13.0),
         ..Default::default()
     });
 
