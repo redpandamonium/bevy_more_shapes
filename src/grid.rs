@@ -23,6 +23,17 @@ impl Default for Grid {
     }
 }
 
+impl Grid {
+    pub fn new_square(length: f32, segments: usize) -> Self {
+        Self {
+            width: length,
+            height: length,
+            width_segments: segments,
+            height_segments: segments
+        }
+    }
+}
+
 impl From<Grid> for Mesh {
     fn from(grid: Grid) -> Self {
 
@@ -51,7 +62,7 @@ impl From<Grid> for Mesh {
             for x in 0..grid.width_segments + 1 {
 
                 positions.push([x as f32 * x_segment_len - width_half, 0.0, z as f32 * z_segment_len - height_half]);
-                uvs.push([x as f32 * width_segments_inv, 1.0 - z as f32 * height_segments_inv]);
+                uvs.push([x as f32 * width_segments_inv, z as f32 * height_segments_inv]);
                 normals.push([0.0, 1.0, 0.0]);
             }
         }
@@ -66,12 +77,12 @@ impl From<Grid> for Mesh {
                 let upper_right = lower_right + (grid.width_segments + 1);
 
                 indices.push(upper_right as u32);
-                indices.push(lower_left as u32);
                 indices.push(lower_right as u32);
+                indices.push(lower_left as u32);
 
                 indices.push(upper_left as u32);
-                indices.push(lower_left as u32);
                 indices.push(upper_right as u32);
+                indices.push(lower_left as u32);
             }
         }
 
@@ -81,30 +92,5 @@ impl From<Grid> for Mesh {
         mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
         mesh.set_indices(Some(Indices::U32(indices)));
         mesh
-    }
-}
-
-pub struct SquareGrid {
-    pub length: f32,
-    pub segments: usize,
-}
-
-impl Default for SquareGrid {
-    fn default() -> Self {
-        SquareGrid {
-            length: 1.0,
-            segments: 1
-        }
-    }
-}
-
-impl From<SquareGrid> for Mesh {
-    fn from(s: SquareGrid) -> Self {
-        Mesh::from(Grid {
-            width: s.length,
-            height: s.length,
-            width_segments: s.segments,
-            height_segments: s.segments
-        })
     }
 }
