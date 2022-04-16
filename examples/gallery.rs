@@ -9,7 +9,7 @@ use bevy::render::settings::{ WgpuSettings, WgpuFeatures };
 use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
-use bevy_more_shapes::{Cone, Cylinder, Grid};
+use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
 use bevy::render::mesh::shape::Icosphere;
 use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
 
@@ -145,6 +145,25 @@ fn spawn_shapes(
         transform: Transform::from_xyz(4.0, 0.0, 11.0),
         ..Default::default()
     });
+
+    // Triangle polygon
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Polygon::new_triangle(1.0))),
+        material: materials.add(StandardMaterial::from(Color::GREEN)),
+        transform: Transform::from_xyz(6.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
+    // Octagon polygon
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Polygon::new_octagon(1.0))),
+        material: materials.add(StandardMaterial::from(Color::DARK_GRAY)),
+        transform: Transform::from_xyz(6.0, 0.0, 7.0),
+        ..Default::default()
+    });
+
+    // Star
+
 
     // Sun
     commands.spawn_bundle(DirectionalLightBundle {
