@@ -12,6 +12,7 @@ repository = "https://github.com/redpandamonium/bevy_more_shapes"
 
 [dependencies]
 bevy = { version = "0.7", features = ["render"] }
+triangulate = "0.1.0"
 
 [dev-dependencies]
 bevy = "0.7"
