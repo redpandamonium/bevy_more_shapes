@@ -12,7 +12,7 @@ use bevy::text::{Text, Text2dBundle, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
 use bevy_more_shapes::{Cone, Cylinder};
-use bevy::render::mesh::shape::Quad;
+use bevy::render::mesh::shape::Icosphere;
 use bevy::render::render_resource::Texture;
 use bevy::render::texture::ImageType;
 use bevy::window::WindowFocused;
@@ -32,11 +32,35 @@ fn spawn_shapes(
     // Start out without wireframes, but you can toggle them.
     wireframe_config.global = false;
 
+    // Comparison: Builtin sphere
+    let mut sphere = Icosphere::default();
+    sphere.radius = 0.5;
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(sphere)),
+        material: materials.add(StandardMaterial::from(Color::BISQUE)),
+        transform: Transform::from_xyz(-2.0, 0.0, 5.0),
+        ..Default::default()
+    });
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(sphere)),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(-2.0, 0.0, 7.0),
+        ..Default::default()
+    });
+
     // Default cone
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(Color::GOLD)),
         transform: Transform::from_xyz(0.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
+    // Textured cone
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cone::default())),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(0.0, 0.0, 7.0),
         ..Default::default()
     });
 
@@ -146,6 +170,7 @@ fn spawn_camera(
 ) {
 
     let mut controller = FpsCameraController::default();
+    controller.enabled = false; // we have a system that takes care of this, so disable it to prevent first-frame weirdness
     controller.smoothing_weight = 0.5;
     controller.translate_sensitivity = 0.4;
 
