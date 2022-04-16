@@ -2,7 +2,7 @@
 // This is based on a blog post found here: http://apparat-engine.blogspot.com/2013/04/procdural-meshes-cylinder.html.
 
 use std::slice::Iter;
-use bevy::math::Vec3;
+use bevy::math::{Quat, Vec3};
 use bevy::render::mesh::{Indices, Mesh, VertexAttributeValues};
 use bevy::render::render_resource::PrimitiveTopology;
 
@@ -47,56 +47,6 @@ impl VertexPass {
         VALUES.iter()
     }
 }
-
-/*
-impl From<Cylinder> for Mesh {
-    fn from(_: Cylinder) -> Self {
-
-        let mut vertices = Vec::new();
-        let mut indices = Vec::new();
-        let mut normals = Vec::new();
-        let mut uvs = Vec::new();
-
-        let angle_step = 2.0 * std::f32::consts::PI / 9.0;
-
-        for i in 0..10 {
-            let theta = angle_step * i as f32;
-            let position = Vec3::new(
-                0.5 * f32::cos(theta),
-                1.0,
-                0.5 * f32::sin(theta),
-            );
-            vertices.push(position.into());
-        }
-
-        for _ in 0..11 {
-            normals.push([0.0, 1.0, 0.0]);
-        }
-        for _ in 0..11 {
-            uvs.push([0.0, 0.0]);
-        }
-
-        vertices.push(Vec3::new(0.0, 1.0, 0.0).into()); // top
-
-        for i in 0..10 {
-            let l = i + 1;
-            let r = i;
-
-            indices.push((vertices.len() - 1) as u32);
-            indices.push(l);
-            indices.push(r);
-        }
-
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_indices(Some(Indices::U32(indices)));
-        mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, VertexAttributeValues::Float32x3(vertices));
-        mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, VertexAttributeValues::Float32x3(normals));
-        mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, VertexAttributeValues::Float32x2(uvs));
-        mesh
-    }
-}
-
- */
 
 fn add_indices_top(indices: &mut Vec<u32>, mid_idx: u32, cylinder: &Cylinder) {
 
@@ -170,6 +120,19 @@ fn add_indices_body(indices: &mut Vec<u32>, cylinder: &Cylinder) {
     indices.push(lb);
 }
 
+struct CylindricalCoordinate {
+    rho: f32,
+    phi: f32,
+    z: f32,
+}
+
+// https://en.wikipedia.org/wiki/UV_mapping
+fn sphere_coordinates(sphere_coord: Vec3) -> [f32; 2] {
+    let u = 0.5 + (f32::atan2(sphere_coord.x, sphere_coord.z) / (2.0 * std::f32::consts::PI));
+    let v = 0.5 + f32::asin(sphere_coord.y) / std::f32::consts::PI;
+    [u, v]
+}
+
 impl From<Cylinder> for Mesh {
     fn from(cylinder: Cylinder) -> Self {
 
@@ -199,10 +162,10 @@ impl From<Cylinder> for Mesh {
                 let theta = angle_step * row_idx as f32;
 
                 let height = match pass {
-                    VertexPass::Top => cylinder.height,
-                    VertexPass::Bottom => 0.0,
-                    VertexPass::TopRing => cylinder.height,
-                    VertexPass::BottomRing => 0.0,
+                    VertexPass::Top => cylinder.height / 2.0,
+                    VertexPass::Bottom => -cylinder.height / 2.0,
+                    VertexPass::TopRing => cylinder.height / 2.0,
+                    VertexPass::BottomRing => -cylinder.height / 2.0,
                 };
 
                 let radius = match pass {
@@ -227,18 +190,27 @@ impl From<Cylinder> for Mesh {
 
                 vertices.push(position.to_array());
                 normals.push(normal.to_array());
-                uvs.push([0.0, 0.0]);
+
+                let mut uv = sphere_coordinates(-position.normalize());
+                uv[0] = if uv[0] < 0.0 {
+                    1.0 - uv[0]
+                } else if uv[0] > 1.0 {
+                    uv[0] - 1.0
+                } else {
+                    uv[0]
+                };
+                uvs.push(uv);
                 // TODO: UVs
             }
         }
 
         // Ring center vertices
-        vertices.push(Vec3::new(0.0, cylinder.height, 0.0).to_array()); // top
+        vertices.push([0.0, cylinder.height / 2.0, 0.0]); // top
         normals.push([0.0, 1.0, 0.0]);
-        uvs.push([0.0, 0.0]);
-        vertices.push([0.0, 0.0, 0.0]); // bottom
+        uvs.push([0.5, 0.0]); // We compute them manually because the the algorithm we use is undefined at x=0,y=0.
+        vertices.push([0.0, -cylinder.height / 2.0, 0.0]); // bottom
         normals.push([0.0, -1.0, 0.0]);
-        uvs.push([0.0, 0.0]);
+        uvs.push([0.5, 1.0]);
 
         // Add the indices
         let top_mid_idx = (vertices.len() - 2) as u32;
