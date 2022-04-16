@@ -24,6 +24,9 @@ This crate tracks bevy's versions, meaning the API of this crate will only break
 | 0.1.x   | 0.6.x        |
 | 0.2.x   | 0.7.x        |
 
+## Known Issues
+
+The UV coordinates are correct but not always useful. Repeating textures make this better, but consider changing the UVs for your use-case.
 
 ## Contributing
 
