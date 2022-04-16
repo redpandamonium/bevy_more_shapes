@@ -17,4 +17,4 @@ bevy = { version = "0.6", features = ["render"] }
 
 [dev-dependencies]
 bevy = "0.6"
-bevy_flycam = "0.6.0"
+smooth-bevy-cameras = "0.2"
