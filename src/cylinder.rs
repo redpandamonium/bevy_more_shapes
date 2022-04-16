@@ -129,6 +129,13 @@ fn sphere_coordinates(sphere_coord: Vec3) -> [f32; 2] {
 
 impl From<Cylinder> for Mesh {
     fn from(cylinder: Cylinder) -> Self {
+
+        // Input parameter validation
+        assert!(cylinder.height > 0.0, "Must have positive height");
+        assert!(cylinder.radius_bottom >= 0.0, "Must have positive radius.");
+        assert!(cylinder.radius_top >= 0.0, "Must have positive radius.");
+        assert!(cylinder.subdivisions > 2, "Must have at least 3 subdivisions to close the surface.");
+
         // Vertex order in the buffer:
         // 1: n_subdivisions top face
         // 2: n_subdivisions bottom face

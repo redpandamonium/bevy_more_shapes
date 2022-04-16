@@ -23,6 +23,12 @@ impl Default for Cone {
 
 impl From<Cone> for Mesh {
     fn from(cone: Cone) -> Self {
+
+        // Validate input parameters
+        assert!(cone.height > 0.0, "Must have positive height");
+        assert!(cone.radius > 0.0, "Must have positive radius");
+        assert!(cone.subdivisions > 2, "Must have at least 3 subdivisions to close the surface");
+
         // code adapted from http://apparat-engine.blogspot.com/2013/04/procedural-meshes-torus.html
         // (source code at https://github.com/SEilers/Apparat)
 

@@ -37,6 +37,12 @@ impl Grid {
 impl From<Grid> for Mesh {
     fn from(grid: Grid) -> Self {
 
+        // Validate input parameters
+        assert!(grid.width_segments > 0, "A grid must have segments");
+        assert!(grid.height_segments > 0, "A grid must have segments");
+        assert!(grid.width > 0.0, "A grid must have positive width");
+        assert!(grid.height > 0.0, "A grid must have positive height");
+
         let num_points = (grid.height_segments + 1) * (grid.width_segments + 1);
         let num_faces = grid.height_segments * grid.width_segments;
 
