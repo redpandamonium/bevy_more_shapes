@@ -10,8 +10,6 @@ keywords = ["gamedev", "graphics", "bevy", "geometry", "shapes"]
 categories = ["graphics", "game-development"]
 repository = "https://github.com/redpandamonium/bevy_more_shapes"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 bevy = { version = "0.7", features = ["render"] }
 
