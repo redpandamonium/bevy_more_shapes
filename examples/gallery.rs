@@ -1,21 +1,17 @@
-use std::fs;
 use bevy::prelude::*;
 use bevy::app::App;
 use bevy::asset::{AssetServer, Assets};
 use bevy::input::Input;
-use bevy::math::{DVec2, Rect, Vec3};
+use bevy::math::{Rect, Vec3};
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::pbr::{AmbientLight, DirectionalLight, PbrBundle, StandardMaterial};
 // use bevy::render::settings::{ WgpuSettings, WgpuFeatures }; bevy 0.7
 use bevy::render::options::{ WgpuFeatures, WgpuOptions }; // bevy 0.6
-use bevy::text::{Text, Text2dBundle, TextAlignment, TextStyle};
+use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
 use bevy_more_shapes::{Cone, Cylinder};
 use bevy::render::mesh::shape::Icosphere;
-use bevy::render::render_resource::Texture;
-use bevy::render::texture::ImageType;
-use bevy::window::WindowFocused;
 use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
 
 // Spawns the actual gallery of shapes. Spawns a row for each type in z+ direction.
