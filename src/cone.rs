@@ -34,18 +34,18 @@ impl From<Cone> for Mesh {
         let side_stride = 2.0 * std::f32::consts::PI / cone.subdivisions as f32;
 
         // Cone tip
-        positions.push([0.0, cone.height, 0.0]);
+        positions.push([0.0, cone.height / 2.0, 0.0]);
         normals.push(Vec3::Y.into());
         uvs.push([0.0, 1.0]);
         // Bottom center
-        positions.push([0.0, 0.0, 0.0]);
+        positions.push([0.0, -cone.height / 2.0, 0.0]);
         normals.push(Vec3::new(0.0, -1.0, 0.0).into());
         uvs.push([0.0, -1.0]);
 
         for side in 0..=cone.subdivisions {
             let phi = side_stride * side as f32;
             let x = phi.cos() * cone.radius;
-            let y = 0.0;
+            let y = -cone.height / 2.0;
             let z = phi.sin() * cone.radius;
 
             let vertex = Vec3::new(x, y, z);
