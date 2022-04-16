@@ -5,8 +5,7 @@ use bevy::input::Input;
 use bevy::math::{Rect, Vec3};
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::pbr::{AmbientLight, DirectionalLight, PbrBundle, StandardMaterial};
-// use bevy::render::settings::{ WgpuSettings, WgpuFeatures }; bevy 0.7
-use bevy::render::options::{ WgpuFeatures, WgpuOptions }; // bevy 0.6
+use bevy::render::settings::{ WgpuSettings, WgpuFeatures };
 use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
@@ -23,7 +22,7 @@ fn spawn_shapes(
     mut ambient_light: ResMut<AmbientLight>,
     asset_server: Res<AssetServer>
 ) {
-    let checkerboard_texture = asset_server.load("textures/checker-map_tho.png");
+    let checkerboard_texture = asset_server.load("textures/checkerboard_1024x1024.png");
 
     // Start out without wireframes, but you can toggle them.
     wireframe_config.global = false;
@@ -339,7 +338,7 @@ fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
         // Wireframes require line mode
-        .insert_resource(WgpuOptions {
+        .insert_resource(WgpuSettings {
             features: WgpuFeatures::POLYGON_MODE_LINE,
             ..Default::default()
         })

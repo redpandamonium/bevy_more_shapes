@@ -4,23 +4,26 @@ It works exactly like the default bevy shapes.
 
 To run the example showcasing all the available shapes, run `cargo run --example gallery`.
 
-This crate tracks bevy's versions, meaning the API of this crate will only break when an API breaking version of bevy is released. It is currently compatible with versions 0.6 of bevy.
-
 ## Features
 
 * Cones
 * Cylinders
+* Grid planes
 
 Planned, coming soon: 
 
 * Torus
-* Grid plane (subdivided quad)
 * Regular polygons
 
-## Known issues
+## Versions
 
-The demo's camera sometimes jumps when you start moving the mouse because the first movement delta is sometimes huge. 
-This is an issue with the camera plugin used.
+This crate tracks bevy's versions, meaning the API of this crate will only break when an API breaking version of bevy is released.
+
+| Version | Bevy version |
+|---------|--------------|
+| 0.1.x   | 0.6.x        |
+| 0.2.x   | 0.7.x        |
+
 
 ## Contributing
 

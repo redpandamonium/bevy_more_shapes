@@ -1,6 +1,6 @@
 [package]
 name = "bevy_more_shapes"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Leon Suchy"]
 license = "MIT OR Apache-2.0"
@@ -13,8 +13,8 @@ repository = "https://github.com/redpandamonium/bevy_more_shapes"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.6", features = ["render"] }
+bevy = { version = "0.7", features = ["render"] }
 
 [dev-dependencies]
-bevy = "0.6"
-smooth-bevy-cameras = "0.2"
+bevy = "0.7"
+smooth-bevy-cameras = "0.3"
