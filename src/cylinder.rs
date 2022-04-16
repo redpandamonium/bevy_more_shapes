@@ -1,10 +1,9 @@
-
 // This is based on a blog post found here: http://apparat-engine.blogspot.com/2013/04/procdural-meshes-cylinder.html.
 
-use std::slice::Iter;
-use bevy::math::{Quat, Vec3};
-use bevy::render::mesh::{Indices, Mesh, VertexAttributeValues};
+use bevy::math::Vec3;
+use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
+use std::slice::Iter;
 
 pub struct Cylinder {
     pub height: f32,
@@ -25,33 +24,38 @@ impl Default for Cylinder {
 }
 
 impl Cylinder {
-
     /// Create a cylinder where the top and bottom disc have the same radius.
     pub fn new_regular(height: f32, radius: f32, subdivisions: u32) -> Self {
         Self {
             height,
             radius_bottom: radius,
             radius_top: radius,
-            subdivisions
+            subdivisions,
         }
     }
 }
 
 enum VertexPass {
-    Top, Bottom, TopRing, BottomRing,
+    Top,
+    Bottom,
+    TopRing,
+    BottomRing,
 }
 
 impl VertexPass {
     pub fn iter() -> Iter<'static, VertexPass> {
-        static VALUES: [VertexPass; 4] = [VertexPass::Top, VertexPass::Bottom, VertexPass::TopRing, VertexPass::BottomRing]; // order is important, top vertices come first
+        static VALUES: [VertexPass; 4] = [
+            VertexPass::Top,
+            VertexPass::Bottom,
+            VertexPass::TopRing,
+            VertexPass::BottomRing,
+        ]; // order is important, top vertices come first
         VALUES.iter()
     }
 }
 
 fn add_indices_top(indices: &mut Vec<u32>, mid_idx: u32, cylinder: &Cylinder) {
-
-    for i in 0..cylinder.subdivisions - 1  {
-
+    for i in 0..cylinder.subdivisions - 1 {
         let lt = i;
         let rt = i + 1;
 
@@ -67,11 +71,9 @@ fn add_indices_top(indices: &mut Vec<u32>, mid_idx: u32, cylinder: &Cylinder) {
 }
 
 fn add_indices_bottom(indices: &mut Vec<u32>, mid_idx: u32, cylinder: &Cylinder) {
-
     let base_index_bottom = cylinder.subdivisions;
 
     for i in 0..cylinder.subdivisions - 1 {
-
         let lb = i + base_index_bottom;
         let rb = i + 1 + base_index_bottom;
 
@@ -87,15 +89,13 @@ fn add_indices_bottom(indices: &mut Vec<u32>, mid_idx: u32, cylinder: &Cylinder)
 }
 
 fn add_indices_body(indices: &mut Vec<u32>, cylinder: &Cylinder) {
-
     let base_index_top_ring = cylinder.subdivisions * 2;
     let base_index_bottom_ring = cylinder.subdivisions * 3;
 
     for i in 0..cylinder.subdivisions - 1 {
-
-        let lt = i +     base_index_top_ring;
+        let lt = i + base_index_top_ring;
         let rt = i + 1 + base_index_top_ring;
-        let lb = i +     base_index_bottom_ring;
+        let lb = i + base_index_bottom_ring;
         let rb = i + 1 + base_index_bottom_ring;
 
         indices.push(lt);
@@ -120,12 +120,6 @@ fn add_indices_body(indices: &mut Vec<u32>, cylinder: &Cylinder) {
     indices.push(lb);
 }
 
-struct CylindricalCoordinate {
-    rho: f32,
-    phi: f32,
-    z: f32,
-}
-
 // https://en.wikipedia.org/wiki/UV_mapping
 fn sphere_coordinates(sphere_coord: Vec3) -> [f32; 2] {
     let u = 0.5 + (f32::atan2(sphere_coord.x, sphere_coord.z) / (2.0 * std::f32::consts::PI));
@@ -135,7 +129,6 @@ fn sphere_coordinates(sphere_coord: Vec3) -> [f32; 2] {
 
 impl From<Cylinder> for Mesh {
     fn from(cylinder: Cylinder) -> Self {
-
         // Vertex order in the buffer:
         // 1: n_subdivisions top face
         // 2: n_subdivisions bottom face
@@ -149,7 +142,7 @@ impl From<Cylinder> for Mesh {
         let angle_step = 2.0 * std::f32::consts::PI / cylinder.subdivisions as f32;
 
         let mut vertices = Vec::with_capacity(num_vertices as usize);
-        let mut uvs : Vec<[f32; 2]> = Vec::with_capacity(num_vertices as usize);
+        let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(num_vertices as usize);
         let mut normals = Vec::with_capacity(num_vertices as usize);
         let mut indices = Vec::with_capacity(num_indices as usize);
 
@@ -158,7 +151,6 @@ impl From<Cylinder> for Mesh {
         // Ring vertices
         for pass in VertexPass::iter() {
             for row_idx in 0..cylinder.subdivisions {
-
                 let theta = angle_step * row_idx as f32;
 
                 let height = match pass {
@@ -175,11 +167,8 @@ impl From<Cylinder> for Mesh {
                     VertexPass::BottomRing => cylinder.radius_bottom,
                 };
 
-                let position = Vec3::new(
-                    radius * f32::cos(theta),
-                    height,
-                    radius * f32::sin(theta),
-                );
+                let position =
+                    Vec3::new(radius * f32::cos(theta), height, radius * f32::sin(theta));
 
                 let normal = match pass {
                     VertexPass::Top => Vec3::new(0.0, 1.0, 0.0),
