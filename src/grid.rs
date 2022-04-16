@@ -1,0 +1,110 @@
+use bevy::render::mesh::{Indices, Mesh};
+use bevy::render::render_resource::PrimitiveTopology;
+
+pub struct Grid {
+    /// Length along the x axis
+    pub width: f32,
+    /// Length along the z axis
+    pub height: f32,
+    /// Segments on the x axis
+    pub width_segments: usize,
+    /// Segments on the z axis
+    pub height_segments: usize,
+}
+
+impl Default for Grid {
+    fn default() -> Self {
+        Grid {
+            width: 1.0,
+            height: 1.0,
+            width_segments: 1,
+            height_segments: 1
+        }
+    }
+}
+
+impl From<Grid> for Mesh {
+    fn from(grid: Grid) -> Self {
+
+        let num_points = (grid.height_segments + 1) * (grid.width_segments + 1);
+        let num_faces = grid.height_segments * grid.width_segments;
+
+        let mut indices : Vec<u32> = Vec::with_capacity(6 * num_faces); // two triangles per rectangle
+        let mut positions : Vec<[f32; 3]> = Vec::with_capacity(num_points);
+        let mut uvs : Vec<[f32; 2]> = Vec::with_capacity(num_points);
+        let mut normals : Vec<[f32; 3]> = Vec::with_capacity(num_points);
+
+        // This is used to center the grid on the origin
+        let width_half = grid.width / 2.0;
+        let height_half = grid.height / 2.0;
+
+        // The length of a single segment
+        let x_segment_len = grid.width / grid.width_segments as f32;
+        let z_segment_len = grid.height / grid.height_segments as f32;
+
+        // The inverse of the segment lengths
+        let width_segments_inv = 1.0 / grid.width_segments as f32;
+        let height_segments_inv = 1.0 / grid.height_segments as f32;
+
+        // Generate vertices
+        for z in 0..grid.height_segments + 1 {
+            for x in 0..grid.width_segments + 1 {
+
+                positions.push([x as f32 * x_segment_len - width_half, 0.0, z as f32 * z_segment_len - height_half]);
+                uvs.push([x as f32 * width_segments_inv, 1.0 - z as f32 * height_segments_inv]);
+                normals.push([0.0, 1.0, 0.0]);
+            }
+        }
+
+        // Generate indices
+        for face_z in 0..grid.height_segments {
+            for face_x in 0..grid.width_segments {
+
+                let lower_left = face_z * (grid.width_segments + 1) + face_x;
+                let lower_right = lower_left + 1;
+                let upper_left = lower_left + (grid.width_segments + 1);
+                let upper_right = lower_right + (grid.width_segments + 1);
+
+                indices.push(upper_right as u32);
+                indices.push(lower_left as u32);
+                indices.push(lower_right as u32);
+
+                indices.push(upper_left as u32);
+                indices.push(lower_left as u32);
+                indices.push(upper_right as u32);
+            }
+        }
+
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+        mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+        mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+        mesh.set_indices(Some(Indices::U32(indices)));
+        mesh
+    }
+}
+
+pub struct SquareGrid {
+    pub length: f32,
+    pub segments: usize,
+}
+
+impl Default for SquareGrid {
+    fn default() -> Self {
+        SquareGrid {
+            length: 1.0,
+            segments: 1
+        }
+    }
+}
+
+impl From<SquareGrid> for Mesh {
+    fn from(s: SquareGrid) -> Self {
+        Mesh::from(Grid {
+            width: s.length,
+            height: s.length,
+            width_segments: s.segments,
+            height_segments: s.segments
+        })
+    }
+}
