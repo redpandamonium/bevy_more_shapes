@@ -1,7 +1,9 @@
+use std::convert::Infallible;
+use std::ops::Index;
 use bevy::math::{Rect, Vec2, Vec3};
 use bevy::prelude::Mesh;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use triangulate::{FanBuilder, PolygonList, TriangleWinding, Triangulate, TriangulateDefault, TriangulationError, Vertex};
+use triangulate::{FanBuilder, ListBuilder, PolygonList, TriangleWinding, Triangulate, TriangulateDefault, TriangulationError, Vertex};
 use triangulate::builders::{FanToListAdapter, VecDelimitedIndexedFanBuilder, VecIndexedListBuilder, VecVecFanBuilder};
 
 pub struct Polygon {
@@ -79,6 +81,38 @@ impl Vertex for Vec2f {
 
     fn y(&self) -> Self::Coordinate {
         self.0.y
+    }
+}
+
+// This is a wrapper around VecIndexedListBuilder with TriangleWinding::Clockwise instead of counter-clockwise.
+// Otherwise this is a transparent wrapper.
+struct CustomWindingListIndexBuilder<'f, 'a, P: PolygonList<'a>>(VecIndexedListBuilder<'f, 'a, P>) where P::Vertex: Clone;
+
+impl<'f, 'a, P: PolygonList<'a>> ListBuilder<'a, P> for CustomWindingListIndexBuilder<'f, 'a, P>
+where P::Vertex: Clone {
+    type Initializer = <VecIndexedListBuilder<'f, 'a, P> as ListBuilder<'a, P>>::Initializer;
+    type Output = <VecIndexedListBuilder<'f, 'a, P> as ListBuilder<'a, P>>::Output;
+    type Error = <VecIndexedListBuilder<'f, 'a, P> as ListBuilder<'a, P>>::Error;
+    const WINDING: TriangleWinding = TriangleWinding::Clockwise;
+
+    fn new(initializer: Self::Initializer, polygon_list: P) -> Result<Self, Self::Error> where Self: Sized {
+        let res = VecIndexedListBuilder::new(initializer, polygon_list);
+        match res {
+            Ok(o) => Ok(Self(o)),
+            Err(e) => Err(e)
+        }
+    }
+
+    fn add_triangle(&mut self, vi0: P::Index, vi1: P::Index, vi2: P::Index) -> Result<(), Self::Error> {
+        self.0.add_triangle(vi0, vi1, vi2)
+    }
+
+    fn build(self) -> Result<Self::Output, Self::Error> {
+        self.0.build()
+    }
+
+    fn fail(self, error: &TriangulationError<Self::Error>) {
+        self.0.fail(error)
     }
 }
 
