@@ -10,7 +10,7 @@ use bevy::render::options::{ WgpuFeatures, WgpuOptions }; // bevy 0.6
 use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::DefaultPlugins;
-use bevy_more_shapes::{Cone, Cylinder};
+use bevy_more_shapes::{Cone, Cylinder, Grid};
 use bevy::render::mesh::shape::Icosphere;
 use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
 
@@ -107,6 +107,43 @@ fn spawn_shapes(
         })),
         material: materials.add(StandardMaterial::from(Color::ORANGE_RED)),
         transform: Transform::from_xyz(2.0, 0.0, 9.0),
+        ..Default::default()
+    });
+
+    // Single-segment grid
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Grid::default())),
+        material: materials.add(StandardMaterial::from(Color::SALMON)),
+        transform: Transform::from_xyz(4.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
+    // Multi-segment grid
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Grid {
+            width: 1.0,
+            height: 0.6,
+            width_segments: 10,
+            height_segments: 6
+        })),
+        material: materials.add(StandardMaterial::from(Color::TEAL)),
+        transform: Transform::from_xyz(4.0, 0.0, 7.0),
+        ..Default::default()
+    });
+
+    // Single-segment grid textured
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Grid::default())),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(4.0, 0.0, 9.0),
+        ..Default::default()
+    });
+
+    // Multi-segment grid textured
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Grid::new_square(1.0, 12))),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(4.0, 0.0, 11.0),
         ..Default::default()
     });
 
