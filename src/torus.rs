@@ -28,6 +28,8 @@ impl Default for Torus {
 impl From<Torus> for Mesh {
     fn from(torus: Torus) -> Mesh {
 
+        // This code is based on http://apparat-engine.blogspot.com/2013/04/procedural-meshes-torus.html
+
         // Input parameter validation
         assert!(torus.radius > 0.0, "The radii of a torus must be positive");
         assert!(torus.ring_radius > 0.0, "The radii of a torus must be positive");
