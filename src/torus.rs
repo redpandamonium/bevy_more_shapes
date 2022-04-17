@@ -72,23 +72,23 @@ impl From<Torus> for Mesh {
         }
 
         // Lambda function that adds the indices for the faces between two vertical rings
-        let generate_vertical_ring_indices = |ring0_base_idx, ring1_base_idx| {
+        let mut generate_vertical_ring_indices = |ring0_base_idx: usize, ring1_base_idx: usize| {
             for vertical_idx in 0..(torus.vertical_segments - 1) {
                 let face = FlatTrapezeIndices {
-                    lower_left: ring0_base_idx + vertical_idx,
-                    upper_left: ring0_base_idx + vertical_idx + 1,
-                    lower_right: ring1_base_idx + vertical_idx,
-                    upper_right: ring1_base_idx + vertical_idx + 1,
+                    lower_left: (ring0_base_idx + vertical_idx) as u32,
+                    upper_left: (ring0_base_idx + vertical_idx + 1) as u32,
+                    lower_right: (ring1_base_idx + vertical_idx) as u32,
+                    upper_right: (ring1_base_idx + vertical_idx + 1) as u32,
                 };
                 face.generate_triangles(&mut indices);
             }
 
             // Stitch together the last vertices and the first
             let face = FlatTrapezeIndices {
-                lower_left: ring0_base_idx + torus.vertical_segments - 1,
-                upper_left: ring0_base_idx,
-                lower_right: ring1_base_idx + torus.vertical_segments - 1,
-                upper_right: ring1_base_idx,
+                lower_left: (ring0_base_idx + torus.vertical_segments - 1) as u32,
+                upper_left: ring0_base_idx as u32,
+                lower_right: (ring1_base_idx + torus.vertical_segments - 1) as u32,
+                upper_right: ring1_base_idx as u32,
             };
             face.generate_triangles(&mut indices);
         };
@@ -102,7 +102,7 @@ impl From<Torus> for Mesh {
 
         // Stitch together the last and first vertical ring
         let ring0_base_idx = (torus.horizontal_segments - 1) * torus.vertical_segments;
-        let ring1_base_idx = 0;
+        let ring1_base_idx = 0usize;
         generate_vertical_ring_indices(ring0_base_idx, ring1_base_idx);
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
