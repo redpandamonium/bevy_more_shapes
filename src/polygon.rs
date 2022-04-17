@@ -139,6 +139,9 @@ impl<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> FanBuilder<'a, P> for Custo
 impl From<Polygon> for Mesh {
     fn from(polygon: Polygon) -> Self {
 
+        // Input parameter validation
+        assert!(polygon.points.len() >= 3, "At least 3 points are needed to produce a closed shape.");
+
         let mut positions : Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
         let mut normals : Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
         let mut uvs : Vec<[f32; 2]> = Vec::with_capacity(polygon.points.len());
