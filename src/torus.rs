@@ -59,13 +59,15 @@ impl From<Torus> for Mesh {
 
                 let theta_vertical = angle_step_vertical * vertical_idx as f32;
                 let position = Vec3::new(
-                    f32::cos(theta_vertical) * (torus.radius + torus.ring_radius * f32::cos(theta_horizontal)),
-                    f32::sin(theta_horizontal) * torus.ring_radius,
-                    f32::sin(theta_vertical) * (torus.radius + torus.ring_radius * f32::cos(theta_horizontal)),
+                    f32::cos(theta_horizontal) * (torus.radius + torus.ring_radius * f32::cos(theta_vertical)),
+                    f32::sin(theta_vertical) * torus.ring_radius,
+                    f32::sin(theta_horizontal) * (torus.radius + torus.ring_radius * f32::cos(theta_vertical)),
                 );
+                // The normal points from the radius 0 torus to the actual point
                 let normal = (position - ring_center).normalize();
                 positions.push(position.to_array());
                 normals.push(normal.to_array());
+
                 // TODO: uvs
                 uvs.push([0.0, 0.0]);
             }
