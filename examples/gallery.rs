@@ -148,7 +148,7 @@ fn spawn_shapes(
 
     // Triangle polygon
     commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(Polygon::new_triangle(1.0))),
+        mesh: meshes.add(Mesh::from(Polygon::new_triangle(0.7))),
         material: materials.add(StandardMaterial::from(Color::GREEN)),
         transform: Transform::from_xyz(6.0, 0.0, 5.0),
         ..Default::default()
@@ -156,14 +156,29 @@ fn spawn_shapes(
 
     // Octagon polygon
     commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(Polygon::new_octagon(1.0))),
-        material: materials.add(StandardMaterial::from(Color::DARK_GRAY)),
+        mesh: meshes.add(Mesh::from(Polygon::new_octagon(0.7))),
+        material: materials.add(StandardMaterial::from(Color::SEA_GREEN)),
         transform: Transform::from_xyz(6.0, 0.0, 7.0),
         ..Default::default()
     });
 
-    // Star
+    // Many-cornered polygon
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Polygon::new_regular_ngon(0.7, 32))),
+        material: materials.add(StandardMaterial::from(Color::YELLOW)),
+        transform: Transform::from_xyz(6.0, 0.0, 9.0),
+        ..Default::default()
+    });
 
+    // Star
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Polygon {
+            points: generate_star_shape(7, 0.7, 0.4)
+        })),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(6.0, 0.0, 11.0),
+        ..Default::default()
+    });
 
     // Sun
     commands.spawn_bundle(DirectionalLightBundle {
@@ -179,6 +194,22 @@ fn spawn_shapes(
 
     // Ambient light
     ambient_light.brightness = 0.2;
+}
+
+fn generate_star_shape(n: usize, radius_big: f32, radius_small: f32) -> Vec<Vec2> {
+
+    let mut positions = Vec::new();
+    let angle_step = 2.0 * std::f32::consts::PI / (n * 2) as f32;
+    for i in 0..2*n {
+        let theta = angle_step * i as f32;
+        if i % 2 == 0 {
+            positions.push(Vec2::new(radius_big * f32::cos(theta), radius_big * f32::sin(theta)));
+        } else {
+            positions.push(Vec2::new(radius_small * f32::cos(theta), radius_small * f32::sin(theta)));
+        }
+    }
+
+    positions
 }
 
 // Spawn a UI layer with the controls and other useful info.
