@@ -202,6 +202,14 @@ fn spawn_shapes(
         ..Default::default()
     });
 
+    // Textured torus
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Torus::default())),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(8.0, 0.0, 9.0),
+        ..Default::default()
+    });
+
     // Sun
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {

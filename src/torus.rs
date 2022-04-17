@@ -68,8 +68,10 @@ impl From<Torus> for Mesh {
                 positions.push(position.to_array());
                 normals.push(normal.to_array());
 
-                // TODO: uvs
-                uvs.push([0.0, 0.0]);
+                // Since the segments are basically a deformed grid, we can overlay that onto the UV space
+                let u = 1.0 / torus.horizontal_segments as f32 * horizontal_idx as f32;
+                let v = 1.0 / torus.vertical_segments as f32 * vertical_idx as f32;
+                uvs.push([u, v]);
             }
         }
 
