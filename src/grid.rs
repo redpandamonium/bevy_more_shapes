@@ -78,11 +78,12 @@ impl From<Grid> for Mesh {
         for face_z in 0..grid.height_segments {
             for face_x in 0..grid.width_segments {
 
+                let lower_left = (face_z * (grid.width_segments + 1) + face_x) as u32;
                 let face = FlatTrapezeIndices {
-                    lower_left: (face_z * (grid.width_segments + 1) + face_x) as u32,
+                    lower_left,
                     upper_left: (lower_left + (grid.width_segments + 1)) as u32,
                     lower_right: (lower_left + 1) as u32,
-                    upper_right: (lower_right + (grid.width_segments + 1)) as u32,
+                    upper_right: (lower_left + 1 + (grid.width_segments + 1)) as u32,
                 };
                 face.generate_triangles(&mut indices);
             }
