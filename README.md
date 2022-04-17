@@ -10,9 +10,11 @@ To run the example showcasing all the available shapes, run `cargo run --example
 * Cylinders
 * Grid planes
 * Arbitrary non-self-intersecting polygons
-
-Planned, coming soon:
 * Torus
+
+Planned:
+
+* Torus segments
 
 ## Versions
 
