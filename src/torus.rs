@@ -34,17 +34,17 @@ impl From<Torus> for Mesh {
         assert!(torus.horizontal_segments >= 3, "3 segments are needed to produce a closed shape.");
         assert!(torus.vertical_segments >= 3, "3 segments are needed to produce a closed shape.");
 
-        let num_vertices = torus.horizontal_segments * torus.vertical_segments;
+        let num_vertices = (torus.horizontal_segments + 1) * (torus.vertical_segments + 1);
         let mut positions : Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
         let mut normals : Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
         let mut uvs : Vec<[f32; 2]> = Vec::with_capacity(num_vertices);
-        let mut indices = Vec::with_capacity(num_vertices * 6); // num_vertices faces, each face is a flat trapeze with 2 triangles
+        let mut indices = Vec::with_capacity(torus.horizontal_segments * torus.vertical_segments * 6);
 
         let angle_step_vertical = 2.0 * std::f32::consts::PI / torus.vertical_segments as f32;
         let angle_step_horizontal = 2.0 * std::f32::consts::PI / torus.horizontal_segments as f32;
 
         // Add vertices ring by ring
-        for horizontal_idx in 0..torus.horizontal_segments {
+        for horizontal_idx in 0..=torus.horizontal_segments {
 
             let theta_horizontal = angle_step_horizontal * horizontal_idx as f32;
 
@@ -55,13 +55,13 @@ impl From<Torus> for Mesh {
                 torus.radius * f32::sin(theta_horizontal)
             );
 
-            for vertical_idx in 0..torus.vertical_segments {
+            for vertical_idx in 0..=torus.vertical_segments {
 
                 let theta_vertical = angle_step_vertical * vertical_idx as f32;
                 let position = Vec3::new(
                     f32::cos(theta_vertical) * (torus.radius + torus.ring_radius * f32::cos(theta_horizontal)),
+                    f32::sin(theta_horizontal) * torus.ring_radius,
                     f32::sin(theta_vertical) * (torus.radius + torus.ring_radius * f32::cos(theta_horizontal)),
-                    f32::sin(theta_horizontal) * torus.ring_radius
                 );
                 let normal = (position - ring_center).normalize();
                 positions.push(position.to_array());
@@ -71,9 +71,13 @@ impl From<Torus> for Mesh {
             }
         }
 
-        // Lambda function that adds the indices for the faces between two vertical rings
-        let mut generate_vertical_ring_indices = |ring0_base_idx: usize, ring1_base_idx: usize| {
-            for vertical_idx in 0..(torus.vertical_segments - 1) {
+        // Add indices for each face
+        for horizontal_idx in 0..torus.horizontal_segments {
+
+            let ring0_base_idx = horizontal_idx * (torus.vertical_segments + 1);
+            let ring1_base_idx = (horizontal_idx + 1) * (torus.vertical_segments + 1);
+
+            for vertical_idx in 0..torus.vertical_segments {
                 let face = FlatTrapezeIndices {
                     lower_left: (ring0_base_idx + vertical_idx) as u32,
                     upper_left: (ring0_base_idx + vertical_idx + 1) as u32,
@@ -82,28 +86,7 @@ impl From<Torus> for Mesh {
                 };
                 face.generate_triangles(&mut indices);
             }
-
-            // Stitch together the last vertices and the first
-            let face = FlatTrapezeIndices {
-                lower_left: (ring0_base_idx + torus.vertical_segments - 1) as u32,
-                upper_left: ring0_base_idx as u32,
-                lower_right: (ring1_base_idx + torus.vertical_segments - 1) as u32,
-                upper_right: ring1_base_idx as u32,
-            };
-            face.generate_triangles(&mut indices);
-        };
-
-        // Add indices for each face
-        for horizontal_idx in 0..(torus.horizontal_segments - 1) {
-            let ring0_base_idx = horizontal_idx * torus.vertical_segments;
-            let ring1_base_idx = (horizontal_idx + 1) * torus.vertical_segments;
-            generate_vertical_ring_indices(ring0_base_idx, ring1_base_idx);
         }
-
-        // Stitch together the last and first vertical ring
-        let ring0_base_idx = (torus.horizontal_segments - 1) * torus.vertical_segments;
-        let ring1_base_idx = 0usize;
-        generate_vertical_ring_indices(ring0_base_idx, ring1_base_idx);
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
