@@ -4,6 +4,7 @@ use bevy::math::Vec3;
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
 use std::slice::Iter;
+use crate::util::FlatTrapezeIndices;
 
 pub struct Cylinder {
     pub height: f32,
@@ -93,31 +94,24 @@ fn add_indices_body(indices: &mut Vec<u32>, cylinder: &Cylinder) {
     let base_index_bottom_ring = cylinder.subdivisions * 3;
 
     for i in 0..cylinder.subdivisions - 1 {
-        let lt = i + base_index_top_ring;
-        let rt = i + 1 + base_index_top_ring;
-        let lb = i + base_index_bottom_ring;
-        let rb = i + 1 + base_index_bottom_ring;
 
-        indices.push(lt);
-        indices.push(rt);
-        indices.push(lb);
-        indices.push(rt);
-        indices.push(rb);
-        indices.push(lb);
+        let face = FlatTrapezeIndices {
+            lower_left: i + base_index_bottom_ring,
+            upper_left: i + base_index_top_ring,
+            lower_right: i + 1 + base_index_bottom_ring,
+            upper_right: i + 1 + base_index_top_ring,
+        };
+        face.generate_triangles(indices);
     }
 
     // Fix gap where the last vertex meets the first
-    let lt = base_index_top_ring + cylinder.subdivisions - 1;
-    let rt = base_index_top_ring;
-    let lb = base_index_bottom_ring + cylinder.subdivisions - 1;
-    let rb = base_index_bottom_ring;
-
-    indices.push(lt);
-    indices.push(rt);
-    indices.push(lb);
-    indices.push(rt);
-    indices.push(rb);
-    indices.push(lb);
+    let face = FlatTrapezeIndices {
+        lower_left: base_index_bottom_ring + cylinder.subdivisions - 1,
+        upper_left: base_index_top_ring + cylinder.subdivisions - 1,
+        lower_right: base_index_bottom_ring,
+        upper_right: base_index_top_ring,
+    };
+    face.generate_triangles(indices);
 }
 
 // https://en.wikipedia.org/wiki/UV_mapping

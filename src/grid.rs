@@ -1,5 +1,6 @@
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
+use crate::util::FlatTrapezeIndices;
 
 pub struct Grid {
     /// Length along the x axis
@@ -77,18 +78,13 @@ impl From<Grid> for Mesh {
         for face_z in 0..grid.height_segments {
             for face_x in 0..grid.width_segments {
 
-                let lower_left = face_z * (grid.width_segments + 1) + face_x;
-                let lower_right = lower_left + 1;
-                let upper_left = lower_left + (grid.width_segments + 1);
-                let upper_right = lower_right + (grid.width_segments + 1);
-
-                indices.push(upper_right as u32);
-                indices.push(lower_right as u32);
-                indices.push(lower_left as u32);
-
-                indices.push(upper_left as u32);
-                indices.push(upper_right as u32);
-                indices.push(lower_left as u32);
+                let face = FlatTrapezeIndices {
+                    lower_left: (face_z * (grid.width_segments + 1) + face_x) as u32,
+                    upper_left: (lower_left + (grid.width_segments + 1)) as u32,
+                    lower_right: (lower_left + 1) as u32,
+                    upper_right: (lower_right + (grid.width_segments + 1)) as u32,
+                };
+                face.generate_triangles(&mut indices);
             }
         }
 
