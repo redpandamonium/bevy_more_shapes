@@ -2,6 +2,7 @@ pub mod cone;
 pub mod cylinder;
 pub mod grid;
 pub mod polygon;
+pub mod torus;
 
 pub use crate::cone::Cone;
 pub use crate::cylinder::Cylinder;
