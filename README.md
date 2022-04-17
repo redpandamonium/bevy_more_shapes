@@ -9,11 +9,10 @@ To run the example showcasing all the available shapes, run `cargo run --example
 * Cones
 * Cylinders
 * Grid planes
+* Arbitrary non-self-intersecting polygons
 
-Planned, coming soon: 
-
+Planned, coming soon:
 * Torus
-* Regular polygons
 
 ## Versions
 
