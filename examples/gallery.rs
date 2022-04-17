@@ -12,6 +12,7 @@ use bevy::DefaultPlugins;
 use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
 use bevy::render::mesh::shape::Icosphere;
 use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
+use bevy_more_shapes::torus::Torus;
 
 // Spawns the actual gallery of shapes. Spawns a row for each type in z+ direction.
 fn spawn_shapes(
@@ -177,6 +178,27 @@ fn spawn_shapes(
         })),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(6.0, 0.0, 11.0),
+        ..Default::default()
+    });
+
+    // Simple torus
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Torus::default())),
+        material: materials.add(StandardMaterial::from(Color::ALICE_BLUE)),
+        transform: Transform::from_xyz(8.0, 0.0, 5.0),
+        ..Default::default()
+    });
+
+    // Low poly torus
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(Torus {
+            radius: 0.8,
+            ring_radius: 0.2,
+            horizontal_segments: 8,
+            vertical_segments: 5
+        })),
+        material: materials.add(StandardMaterial::from(Color::PINK)),
+        transform: Transform::from_xyz(8.0, 0.0, 7.0),
         ..Default::default()
     });
 
