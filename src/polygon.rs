@@ -1,10 +1,9 @@
-use std::convert::Infallible;
-use std::ops::Index;
+use std::marker::PhantomData;
 use bevy::math::{Rect, Vec2, Vec3};
 use bevy::prelude::Mesh;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use triangulate::{FanBuilder, ListBuilder, PolygonList, TriangleWinding, Triangulate, TriangulateDefault, TriangulationError, Vertex};
-use triangulate::builders::{FanToListAdapter, VecDelimitedIndexedFanBuilder, VecIndexedListBuilder, VecVecFanBuilder};
+use triangulate::{FanBuilder, ListBuilder, PolygonList, TriangleWinding, Triangulate, TriangulationError, Vertex};
+use triangulate::builders::VecIndexedListBuilder;
 
 pub struct Polygon {
     /// Points on a path where the last and first point are connected to form a closed circle.
@@ -28,18 +27,22 @@ impl Polygon {
         }
     }
 
+    /// Creates a triangle where the points touch a circle of specified radius.
     pub fn new_triangle(radius: f32) -> Polygon {
         Self::new_regular_ngon(radius, 3)
     }
 
+    /// Creates a pentagon where the points touch a circle of specified radius.
     pub fn new_pentagon(radius: f32) -> Polygon {
         Self::new_regular_ngon(radius, 5)
     }
 
+    /// Creates a hexagon where the points touch a circle of specified radius.
     pub fn new_hexagon(radius: f32) -> Polygon {
         Self::new_regular_ngon(radius, 6)
     }
 
+    /// Creates a octagon where the points touch a circle of specified radius.
     pub fn new_octagon(radius: f32) -> Polygon {
         Self::new_regular_ngon(radius, 8)
     }
@@ -84,35 +87,52 @@ impl Vertex for Vec2f {
     }
 }
 
-// This is a wrapper around VecIndexedListBuilder with TriangleWinding::Clockwise instead of counter-clockwise.
-// Otherwise this is a transparent wrapper.
-struct CustomWindingListIndexBuilder<'f, 'a, P: PolygonList<'a>>(VecIndexedListBuilder<'f, 'a, P>) where P::Vertex: Clone;
+// This is a drop-in replacement for triangulate::builders::FanToListAdapter.
+// The only difference is that it specifies the triangles in reverse winding to match what wpgu expects of its index buffer.
+struct CustomWindingFanToListAdapter<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> {
+    list_builder: LB,
+    vi0: P::Index,
+    vi1: P::Index,
+    _a: PhantomData<&'a ()>,
+}
 
-impl<'f, 'a, P: PolygonList<'a>> ListBuilder<'a, P> for CustomWindingListIndexBuilder<'f, 'a, P>
-where P::Vertex: Clone {
-    type Initializer = <VecIndexedListBuilder<'f, 'a, P> as ListBuilder<'a, P>>::Initializer;
-    type Output = <VecIndexedListBuilder<'f, 'a, P> as ListBuilder<'a, P>>::Output;
-    type Error = <VecIndexedListBuilder<'f, 'a, P> as ListBuilder<'a, P>>::Error;
-    const WINDING: TriangleWinding = TriangleWinding::Clockwise;
+impl<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> FanBuilder<'a, P> for CustomWindingFanToListAdapter<'a, P, LB> {
 
-    fn new(initializer: Self::Initializer, polygon_list: P) -> Result<Self, Self::Error> where Self: Sized {
-        let res = VecIndexedListBuilder::new(initializer, polygon_list);
-        match res {
-            Ok(o) => Ok(Self(o)),
-            Err(e) => Err(e)
-        }
+    type Initializer = LB::Initializer;
+    type Output = LB::Output;
+    type Error = LB::Error;
+
+    const WINDING: TriangleWinding = LB::WINDING;
+
+    fn new(initializer: Self::Initializer, polygon_list: P, vi0: P::Index, vi1: P::Index, vi2: P::Index) -> Result<Self, Self::Error>
+    where Self: Sized {
+        let mut list_builder = LB::new(initializer, polygon_list)?;
+        list_builder.add_triangle(vi0.clone(), vi2.clone(), vi1)?;
+        Ok(Self {
+            list_builder,
+            vi0,
+            vi1: vi2,
+            _a: PhantomData,
+        })
     }
 
-    fn add_triangle(&mut self, vi0: P::Index, vi1: P::Index, vi2: P::Index) -> Result<(), Self::Error> {
-        self.0.add_triangle(vi0, vi1, vi2)
+    fn new_fan(&mut self, vi0: P::Index, vi1: P::Index, vi2: P::Index) -> Result<(), Self::Error> {
+        self.vi0 = vi0.clone();
+        self.vi1 = vi2.clone();
+        self.list_builder.add_triangle(vi0, vi2, vi1)
+    }
+
+    fn extend_fan(&mut self, vi: P::Index) -> Result<(), Self::Error> {
+        let vi1 = std::mem::replace(&mut self.vi1, vi.clone());
+        self.list_builder.add_triangle(self.vi0.clone(),vi, vi1)
     }
 
     fn build(self) -> Result<Self::Output, Self::Error> {
-        self.0.build()
+        self.list_builder.build()
     }
 
     fn fail(self, error: &TriangulationError<Self::Error>) {
-        self.0.fail(error)
+        self.list_builder.fail(error);
     }
 }
 
@@ -138,10 +158,10 @@ impl From<Polygon> for Mesh {
         }
 
         // Triangulate to obtain the indices
-        // This library is terrible to use. The heck is that initializer object.
+        // This library is terrible to use. The heck is that initializer object. And this trait madness.
         let polygons = polygon.points.into_iter().map(|v| Vec2f(v)).collect::<Vec<Vec2f>>();
         let mut null_obj = vec![];
-        let result = polygons.triangulate::<FanToListAdapter<_, VecIndexedListBuilder<_>>>(&mut null_obj).unwrap();
+        let result = polygons.triangulate::<CustomWindingFanToListAdapter<_, VecIndexedListBuilder<_>>>(&mut null_obj).unwrap();
         let indices = result.iter().map(|i| *i as u32).collect();
 
         // Put the mesh together
