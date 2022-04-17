@@ -4,13 +4,13 @@ use bevy::render::mesh::{Indices, PrimitiveTopology};
 
 pub struct Torus {
     /// The radius to the ring from the center
-    radius: f32,
+    pub radius: f32,
     /// The radius of the torus ring
-    ring_radius: f32,
+    pub ring_radius: f32,
     /// The number of segments around horizontal big ring
-    horizontal_segments: usize,
+    pub horizontal_segments: usize,
     /// The number of segments around the vertical small rings
-    vertical_segments: usize,
+    pub vertical_segments: usize,
 }
 
 impl Default for Torus {
@@ -26,6 +26,12 @@ impl Default for Torus {
 
 impl From<Torus> for Mesh {
     fn from(torus: Torus) -> Mesh {
+
+        // Input parameter validation
+        assert!(torus.radius > 0.0, "The radii of a torus must be positive");
+        assert!(torus.ring_radius > 0.0, "The radii of a torus must be positive");
+        assert!(torus.horizontal_segments >= 3, "3 segments are needed to produce a closed shape.");
+        assert!(torus.vertical_segments >= 3, "3 segments are needed to produce a closed shape.");
 
         let num_vertices = torus.horizontal_segments * torus.vertical_segments;
         let mut positions : Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
