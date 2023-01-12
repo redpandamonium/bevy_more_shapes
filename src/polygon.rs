@@ -1,9 +1,11 @@
-use std::marker::PhantomData;
 use bevy::math::{Rect, Vec2, Vec3};
 use bevy::prelude::Mesh;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use triangulate::{FanBuilder, ListBuilder, PolygonList, TriangleWinding, Triangulate, TriangulationError, Vertex};
+use std::marker::PhantomData;
 use triangulate::builders::VecIndexedListBuilder;
+use triangulate::{
+    FanBuilder, ListBuilder, PolygonList, TriangleWinding, Triangulate, TriangulationError, Vertex,
+};
 
 pub struct Polygon {
     /// Points on a path where the last and first point are connected to form a closed circle.
@@ -12,19 +14,19 @@ pub struct Polygon {
 }
 
 impl Polygon {
-
     pub fn new_regular_ngon(radius: f32, n: usize) -> Polygon {
         let angle_step = 2.0 * std::f32::consts::PI / n as f32;
         let mut points = Vec::with_capacity(n);
 
         for i in 0..n {
             let theta = angle_step * i as f32;
-            points.push(Vec2::new(radius * f32::cos(theta), radius * f32::sin(theta)));
+            points.push(Vec2::new(
+                radius * f32::cos(theta),
+                radius * f32::sin(theta),
+            ));
         }
 
-        Polygon {
-            points
-        }
+        Polygon { points }
     }
 
     /// Creates a triangle where the points touch a circle of specified radius.
@@ -48,8 +50,7 @@ impl Polygon {
     }
 }
 
-fn bounding_rect_for_points<'a>(points: impl Iterator<Item=&'a Vec2>) -> Rect<f32> {
-
+fn bounding_rect_for_points<'a>(points: impl Iterator<Item = &'a Vec2>) -> Rect {
     let mut x_min = 0.0f32;
     let mut x_max = 0.0f32;
     let mut y_min = 0.0f32;
@@ -63,10 +64,8 @@ fn bounding_rect_for_points<'a>(points: impl Iterator<Item=&'a Vec2>) -> Rect<f3
     }
 
     Rect {
-        left: x_min,
-        right: x_max,
-        top: y_max,
-        bottom: y_min
+        min: Vec2::new(x_min, y_min),
+        max: Vec2::new(x_max, y_max),
     }
 }
 
@@ -96,16 +95,25 @@ struct CustomWindingFanToListAdapter<'a, P: PolygonList<'a>, LB: ListBuilder<'a,
     _a: PhantomData<&'a ()>,
 }
 
-impl<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> FanBuilder<'a, P> for CustomWindingFanToListAdapter<'a, P, LB> {
-
+impl<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> FanBuilder<'a, P>
+    for CustomWindingFanToListAdapter<'a, P, LB>
+{
     type Initializer = LB::Initializer;
     type Output = LB::Output;
     type Error = LB::Error;
 
     const WINDING: TriangleWinding = LB::WINDING;
 
-    fn new(initializer: Self::Initializer, polygon_list: P, vi0: P::Index, vi1: P::Index, vi2: P::Index) -> Result<Self, Self::Error>
-    where Self: Sized {
+    fn new(
+        initializer: Self::Initializer,
+        polygon_list: P,
+        vi0: P::Index,
+        vi1: P::Index,
+        vi2: P::Index,
+    ) -> Result<Self, Self::Error>
+    where
+        Self: Sized,
+    {
         let mut list_builder = LB::new(initializer, polygon_list)?;
         list_builder.add_triangle(vi0.clone(), vi2.clone(), vi1)?;
         Ok(Self {
@@ -124,7 +132,7 @@ impl<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> FanBuilder<'a, P> for Custo
 
     fn extend_fan(&mut self, vi: P::Index) -> Result<(), Self::Error> {
         let vi1 = std::mem::replace(&mut self.vi1, vi.clone());
-        self.list_builder.add_triangle(self.vi0.clone(),vi, vi1)
+        self.list_builder.add_triangle(self.vi0.clone(), vi, vi1)
     }
 
     fn build(self) -> Result<Self::Output, Self::Error> {
@@ -138,13 +146,15 @@ impl<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> FanBuilder<'a, P> for Custo
 
 impl From<Polygon> for Mesh {
     fn from(polygon: Polygon) -> Self {
-
         // Input parameter validation
-        assert!(polygon.points.len() >= 3, "At least 3 points are needed to produce a closed shape.");
+        assert!(
+            polygon.points.len() >= 3,
+            "At least 3 points are needed to produce a closed shape."
+        );
 
-        let mut positions : Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
-        let mut normals : Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
-        let mut uvs : Vec<[f32; 2]> = Vec::with_capacity(polygon.points.len());
+        let mut positions: Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
+        let mut normals: Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
+        let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(polygon.points.len());
 
         // The domain is needed for UV mapping. The domain tells us how to transform all points to optimally fit the 0-1 range.
         let domain = bounding_rect_for_points(polygon.points.iter());
@@ -155,16 +165,24 @@ impl From<Polygon> for Mesh {
             normals.push(Vec3::Y.to_array());
 
             // Transform the polygon domain to the 0-1 UV domain.
-            let u = (v.x - domain.left) / (domain.right - domain.left);
-            let v = (v.y - domain.bottom) / (domain.top - domain.bottom);
+            let u = (v.x - domain.min.x) / (domain.max.x - domain.min.x);
+            let v = (v.y - domain.min.y) / (domain.max.y - domain.min.y);
             uvs.push([u, v]);
         }
 
         // Triangulate to obtain the indices
         // This library is terrible to use. The heck is that initializer object. And this trait madness.
-        let polygons = polygon.points.into_iter().map(|v| Vec2f(v)).collect::<Vec<Vec2f>>();
+        let polygons = polygon
+            .points
+            .into_iter()
+            .map(|v| Vec2f(v))
+            .collect::<Vec<Vec2f>>();
         let mut null_obj = vec![];
-        let result = polygons.triangulate::<CustomWindingFanToListAdapter<_, VecIndexedListBuilder<_>>>(&mut null_obj).unwrap();
+        let result = polygons
+            .triangulate::<CustomWindingFanToListAdapter<_, VecIndexedListBuilder<_>>>(
+                &mut null_obj,
+            )
+            .unwrap();
         let indices = result.iter().map(|i| *i as u32).collect();
 
         // Put the mesh together
