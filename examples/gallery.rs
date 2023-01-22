@@ -252,8 +252,6 @@ fn generate_star_shape(n: usize, radius_big: f32, radius_small: f32) -> Vec<Vec2
 
 // Spawn a UI layer with the controls and other useful info.
 fn spawn_info_text(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // Camera for the UI layer
-    commands.spawn(Camera2dBundle::default());
 
     // Show text that presents the controls
     commands.spawn(TextBundle {
