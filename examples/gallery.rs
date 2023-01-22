@@ -285,8 +285,6 @@ fn spawn_info_text(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn spawn_camera(mut commands: Commands) {
     let mut controller = FpsCameraController::default();
     controller.enabled = false; // we have a system that takes care of this, so disable it to prevent first-frame weirdness
-    controller.smoothing_weight = 0.5;
-    controller.translate_sensitivity = 0.4;
 
     commands
         .spawn(Camera3dBundle::default())
