@@ -1,18 +1,21 @@
-use bevy::prelude::*;
 use bevy::app::App;
 use bevy::asset::{AssetServer, Assets};
 use bevy::input::Input;
-use bevy::math::{Rect, Vec3};
+use bevy::math::Vec3;
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::pbr::{AmbientLight, DirectionalLight, PbrBundle, StandardMaterial};
-use bevy::render::settings::{ WgpuSettings, WgpuFeatures };
+use bevy::prelude::*;
+use bevy::render::mesh::shape::Icosphere;
+use bevy::render::settings::{WgpuFeatures, WgpuSettings};
 use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
+use bevy::window::CursorGrabMode;
 use bevy::DefaultPlugins;
-use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
-use bevy::render::mesh::shape::Icosphere;
-use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
 use bevy_more_shapes::torus::Torus;
+use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
+use smooth_bevy_cameras::controllers::fps::{
+    FpsCameraBundle, FpsCameraController, FpsCameraPlugin,
+};
 
 // Spawns the actual gallery of shapes. Spawns a row for each type in z+ direction.
 fn spawn_shapes(
@@ -21,7 +24,7 @@ fn spawn_shapes(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut wireframe_config: ResMut<WireframeConfig>,
     mut ambient_light: ResMut<AmbientLight>,
-    asset_server: Res<AssetServer>
+    asset_server: Res<AssetServer>,
 ) {
     let checkerboard_texture = asset_server.load("textures/checkerboard_1024x1024.png");
 
@@ -31,13 +34,13 @@ fn spawn_shapes(
     // Comparison: Builtin sphere
     let mut sphere = Icosphere::default();
     sphere.radius = 0.5;
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(sphere)),
         material: materials.add(StandardMaterial::from(Color::BISQUE)),
         transform: Transform::from_xyz(-2.0, 0.0, 5.0),
         ..Default::default()
     });
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(sphere)),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(-2.0, 0.0, 7.0),
@@ -45,7 +48,7 @@ fn spawn_shapes(
     });
 
     // Default cone
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(Color::GOLD)),
         transform: Transform::from_xyz(0.0, 0.0, 5.0),
@@ -53,7 +56,7 @@ fn spawn_shapes(
     });
 
     // Textured cone
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(0.0, 0.0, 7.0),
@@ -61,7 +64,7 @@ fn spawn_shapes(
     });
 
     // Textured cylinder
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cylinder::default())),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(2.0, 0.0, 13.0),
@@ -69,7 +72,7 @@ fn spawn_shapes(
     });
 
     // Tiny cylinder
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cylinder {
             height: 1.0,
             radius_bottom: 0.5,
@@ -82,7 +85,7 @@ fn spawn_shapes(
     });
 
     // Default cylinder
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cylinder::default())),
         material: materials.add(StandardMaterial::from(Color::CRIMSON)),
         transform: Transform::from_xyz(2.0, 0.0, 5.0),
@@ -90,7 +93,7 @@ fn spawn_shapes(
     });
 
     // Taller regular cylinder
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cylinder::new_regular(2.2, 0.5, 16))),
         material: materials.add(StandardMaterial::from(Color::FUCHSIA)),
         transform: Transform::from_xyz(2.0, 0.0, 7.0),
@@ -98,7 +101,7 @@ fn spawn_shapes(
     });
 
     // Irregular cylinder
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cylinder {
             height: 1.0,
             radius_bottom: 0.6,
@@ -111,7 +114,7 @@ fn spawn_shapes(
     });
 
     // Single-segment grid
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Grid::default())),
         material: materials.add(StandardMaterial::from(Color::SALMON)),
         transform: Transform::from_xyz(4.0, 0.0, 5.0),
@@ -119,12 +122,12 @@ fn spawn_shapes(
     });
 
     // Multi-segment grid
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Grid {
             width: 1.0,
             height: 0.6,
             width_segments: 10,
-            height_segments: 6
+            height_segments: 6,
         })),
         material: materials.add(StandardMaterial::from(Color::TEAL)),
         transform: Transform::from_xyz(4.0, 0.0, 7.0),
@@ -132,7 +135,7 @@ fn spawn_shapes(
     });
 
     // Single-segment grid textured
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Grid::default())),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(4.0, 0.0, 9.0),
@@ -140,7 +143,7 @@ fn spawn_shapes(
     });
 
     // Multi-segment grid textured
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Grid::new_square(1.0, 12))),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(4.0, 0.0, 11.0),
@@ -148,7 +151,7 @@ fn spawn_shapes(
     });
 
     // Triangle polygon
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Polygon::new_triangle(0.7))),
         material: materials.add(StandardMaterial::from(Color::GREEN)),
         transform: Transform::from_xyz(6.0, 0.0, 5.0),
@@ -156,7 +159,7 @@ fn spawn_shapes(
     });
 
     // Octagon polygon
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Polygon::new_octagon(0.7))),
         material: materials.add(StandardMaterial::from(Color::SEA_GREEN)),
         transform: Transform::from_xyz(6.0, 0.0, 7.0),
@@ -164,7 +167,7 @@ fn spawn_shapes(
     });
 
     // Many-cornered polygon
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Polygon::new_regular_ngon(0.7, 32))),
         material: materials.add(StandardMaterial::from(Color::YELLOW)),
         transform: Transform::from_xyz(6.0, 0.0, 9.0),
@@ -172,9 +175,9 @@ fn spawn_shapes(
     });
 
     // Star
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Polygon {
-            points: generate_star_shape(7, 0.7, 0.4)
+            points: generate_star_shape(7, 0.7, 0.4),
         })),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(6.0, 0.0, 11.0),
@@ -182,7 +185,7 @@ fn spawn_shapes(
     });
 
     // Simple torus
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Torus::default())),
         material: materials.add(StandardMaterial::from(Color::ALICE_BLUE)),
         transform: Transform::from_xyz(8.0, 0.0, 5.0),
@@ -190,12 +193,12 @@ fn spawn_shapes(
     });
 
     // Low poly torus
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Torus {
             radius: 0.8,
             ring_radius: 0.2,
             horizontal_segments: 8,
-            vertical_segments: 5
+            vertical_segments: 5,
         })),
         material: materials.add(StandardMaterial::from(Color::PINK)),
         transform: Transform::from_xyz(8.0, 0.0, 7.0),
@@ -203,7 +206,7 @@ fn spawn_shapes(
     });
 
     // Textured torus
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Torus::default())),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(8.0, 0.0, 9.0),
@@ -211,7 +214,7 @@ fn spawn_shapes(
     });
 
     // Sun
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::WHITE,
             illuminance: 15000.0,
@@ -227,15 +230,20 @@ fn spawn_shapes(
 }
 
 fn generate_star_shape(n: usize, radius_big: f32, radius_small: f32) -> Vec<Vec2> {
-
     let mut positions = Vec::new();
     let angle_step = 2.0 * std::f32::consts::PI / (n * 2) as f32;
-    for i in 0..2*n {
+    for i in 0..2 * n {
         let theta = angle_step * i as f32;
         if i % 2 == 0 {
-            positions.push(Vec2::new(radius_big * f32::cos(theta), radius_big * f32::sin(theta)));
+            positions.push(Vec2::new(
+                radius_big * f32::cos(theta),
+                radius_big * f32::sin(theta),
+            ));
         } else {
-            positions.push(Vec2::new(radius_small * f32::cos(theta), radius_small * f32::sin(theta)));
+            positions.push(Vec2::new(
+                radius_small * f32::cos(theta),
+                radius_small * f32::sin(theta),
+            ));
         }
     }
 
@@ -244,54 +252,51 @@ fn generate_star_shape(n: usize, radius_big: f32, radius_small: f32) -> Vec<Vec2
 
 // Spawn a UI layer with the controls and other useful info.
 fn spawn_info_text(mut commands: Commands, asset_server: Res<AssetServer>) {
-
     // Camera for the UI layer
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn(Camera2dBundle::default());
 
     // Show text that presents the controls
-    commands.spawn_bundle(TextBundle {
+    commands.spawn(TextBundle {
         style: Style {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
-            position: Rect {
+            position: UiRect {
                 top: Val::Px(10.0),
                 left: Val::Px(10.0),
                 ..Default::default()
             },
             ..Default::default()
         },
-        text: Text::with_section(
+        text: Text::from_section(
             "WASD + Mouse movement\nSpace Up, LShift Down\nESC toggle input grab\nX toggle wireframes",
             TextStyle {
                 font: asset_server.load("fonts/FiraSans-Medium.ttf"),
                 font_size: 15.0,
                 color: Color::WHITE,
             },
+        ).with_alignment(
             TextAlignment {
                 vertical: VerticalAlign::Top,
                 horizontal: HorizontalAlign::Left
-            }
-        ),
+        }),
         ..Default::default()
     });
 }
 
 // Spawn and configure the camera.
-fn spawn_camera(
-    mut commands: Commands,
-) {
-
+fn spawn_camera(mut commands: Commands) {
     let mut controller = FpsCameraController::default();
     controller.enabled = false; // we have a system that takes care of this, so disable it to prevent first-frame weirdness
     controller.smoothing_weight = 0.5;
     controller.translate_sensitivity = 0.4;
 
-    commands.spawn_bundle(FpsCameraBundle::new(
-        controller,
-        PerspectiveCameraBundle::default(),
-        Vec3::new(0.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 1.0)
-    ));
+    commands
+        .spawn(Camera3dBundle::default())
+        .insert(FpsCameraBundle::new(
+            controller,
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 0.0, 1.0),
+        ));
 }
 
 // Toggles global wireframe mode (all meshes) on a key press.
@@ -306,6 +311,7 @@ fn toggle_wireframe_system(
 
 pub struct MouseLockPlugin;
 
+#[derive(Resource)]
 pub struct MouseLock {
     /// If the lock is engaged the input will be grabbed and the cursor hidden.
     pub lock: bool,
@@ -324,6 +330,14 @@ impl MouseLock {
             override_default_lock_system,
             last_position: None,
             last_lock: false,
+        }
+    }
+
+    pub fn grab_mode(&self) -> CursorGrabMode {
+        if self.lock {
+            CursorGrabMode::Locked
+        } else {
+            CursorGrabMode::None
         }
     }
 }
@@ -355,8 +369,7 @@ fn automatic_lock_system(
         if keys.just_pressed(KeyCode::Escape) {
             lock.lock = false;
         }
-    }
-    else {
+    } else {
         // The current focus state is the last focus event.
         if mouse.just_pressed(MouseButton::Left) {
             lock.lock = true;
@@ -365,13 +378,9 @@ fn automatic_lock_system(
 }
 
 // Observed the MouseLock status and updates the actual window config according to the status.
-fn update_lock(
-    mut lock: ResMut<MouseLock>,
-    mut windows: ResMut<Windows>,
-) {
+fn update_lock(mut lock: ResMut<MouseLock>, mut windows: ResMut<Windows>) {
     // Change detected
     if lock.lock != lock.last_lock {
-
         let window = windows.get_primary_mut().unwrap();
 
         // Locking, save position
@@ -380,7 +389,7 @@ fn update_lock(
         }
 
         // Set display modes
-        window.set_cursor_lock_mode(lock.lock);
+        window.set_cursor_grab_mode(lock.grab_mode());
         window.set_cursor_visibility(!lock.lock);
 
         // Unlocked, restore cursor position
