@@ -26,6 +26,7 @@ This crate tracks bevy's versions, meaning the API of this crate will only break
 |---------|--------------|
 | 0.1.x   | 0.6.x        |
 | 0.2.x   | 0.7.x        |
+| 0.3.x   | 0.9.x        |
 
 ## Known Issues
 
