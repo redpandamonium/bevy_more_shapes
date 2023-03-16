@@ -9,8 +9,9 @@ use bevy::render::mesh::shape::Icosphere;
 use bevy::render::settings::{WgpuFeatures, WgpuSettings};
 use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
-use bevy::window::CursorGrabMode;
+use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::DefaultPlugins;
+use bevy::render::RenderPlugin;
 use bevy_more_shapes::torus::Torus;
 use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
 use smooth_bevy_cameras::controllers::fps::{
@@ -35,13 +36,13 @@ fn spawn_shapes(
     let mut sphere = Icosphere::default();
     sphere.radius = 0.5;
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(sphere)),
+        mesh: meshes.add(Mesh::try_from(sphere).unwrap()),
         material: materials.add(StandardMaterial::from(Color::BISQUE)),
         transform: Transform::from_xyz(-2.0, 0.0, 5.0),
         ..Default::default()
     });
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(sphere)),
+        mesh: meshes.add(Mesh::try_from(sphere).unwrap()),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(-2.0, 0.0, 7.0),
         ..Default::default()
@@ -232,12 +233,9 @@ fn spawn_shapes(
         mat.cull_mode = None;
         commands.spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(Torus {
-                radius: 0.8,
-                tube_radius: 0.2,
-                radial_segments: 64,
-                tube_segments: 32,
                 radial_circumference: std::f32::consts::PI,
                 tube_circumference: std::f32::consts::TAU,
+                ..Default::default()
             })),
             material: materials.add(mat),
             transform: Transform::from_xyz(10.0, 0.0, 5.0),
@@ -253,12 +251,9 @@ fn spawn_shapes(
         flipped_transform.rotation = Quat::from_rotation_x(std::f32::consts::PI);
         commands.spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(Torus {
-                radius: 0.8,
-                tube_radius: 0.2,
-                radial_segments: 64,
-                tube_segments: 32,
                 radial_circumference: std::f32::consts::TAU,
                 tube_circumference: std::f32::consts::PI,
+                ..Default::default()
             })),
             material: materials.add(mat),
             transform: flipped_transform,
@@ -272,12 +267,9 @@ fn spawn_shapes(
         mat.cull_mode = None;
         commands.spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(Mesh::from(Torus {
-                radius: 0.8,
-                tube_radius: 0.2,
-                radial_segments: 64,
-                tube_segments: 32,
                 radial_circumference: std::f32::consts::PI * 4.0/3.0,
                 tube_circumference: std::f32::consts::TAU,
+                ..Default::default()
             }))),
             material: materials.add(mat),
             transform: Transform::from_xyz(10.0, 0.0, 9.0),
@@ -344,11 +336,7 @@ fn spawn_info_text(mut commands: Commands, asset_server: Res<AssetServer>) {
                 font_size: 15.0,
                 color: Color::WHITE,
             },
-        ).with_alignment(
-            TextAlignment {
-                vertical: VerticalAlign::Top,
-                horizontal: HorizontalAlign::Left
-        }),
+        ).with_alignment(TextAlignment::Left),
         ..Default::default()
     });
 }
@@ -364,6 +352,7 @@ fn spawn_camera(mut commands: Commands) {
             controller,
             Vec3::new(0.0, 0.0, 0.0),
             Vec3::new(0.0, 0.0, 1.0),
+            Vec3::new(0.0, 1.0, 0.0),
         ));
 }
 
@@ -446,10 +435,12 @@ fn automatic_lock_system(
 }
 
 // Observed the MouseLock status and updates the actual window config according to the status.
-fn update_lock(mut lock: ResMut<MouseLock>, mut windows: ResMut<Windows>) {
+fn update_lock(mut lock: ResMut<MouseLock>, mut primary_query: Query<&mut Window, With<PrimaryWindow>>) {
+
     // Change detected
     if lock.lock != lock.last_lock {
-        let window = windows.get_primary_mut().unwrap();
+
+        let mut window = primary_query.get_single_mut().unwrap();
 
         // Locking, save position
         if lock.lock {
@@ -457,14 +448,14 @@ fn update_lock(mut lock: ResMut<MouseLock>, mut windows: ResMut<Windows>) {
         }
 
         // Set display modes
-        window.set_cursor_grab_mode(lock.grab_mode());
-        window.set_cursor_visibility(!lock.lock);
+        window.cursor.grab_mode = lock.grab_mode();
+        window.cursor.visible = !lock.lock;
 
         // Unlocked, restore cursor position
         if !lock.lock {
             // Try to restore cursor position
             if let Some(pos) = lock.last_position {
-                window.set_cursor_position(pos);
+                window.set_cursor_position(Some(pos));
             }
         }
 
@@ -479,7 +470,7 @@ impl Plugin for MouseLockPlugin {
             // Add default config
             .insert_resource(MouseLock::default())
             .add_system(automatic_lock_system)
-            .add_system_to_stage(CoreStage::PostUpdate, update_lock);
+            .add_system(update_lock.in_base_set(CoreSet::PostUpdate));
     }
 }
 
@@ -493,13 +484,14 @@ fn lock_camera(
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
-        // Wireframes require line mode
-        .insert_resource(WgpuSettings {
-            features: WgpuFeatures::POLYGON_MODE_LINE,
-            ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        .insert_resource(Msaa::Sample4)
+        .add_plugins(DefaultPlugins.set(RenderPlugin {
+            wgpu_settings: WgpuSettings {
+                // Wireframes require line mode
+                features: WgpuFeatures::POLYGON_MODE_LINE,
+                ..default()
+            },
+        }))
         .add_plugin(smooth_bevy_cameras::LookTransformPlugin)
         .add_plugin(FpsCameraPlugin::default())
         .add_plugin(WireframePlugin)

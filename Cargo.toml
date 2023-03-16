@@ -12,12 +12,12 @@ repository = "https://github.com/redpandamonium/bevy_more_shapes"
 
 [dependencies]
 # The parts of bevy relevant to meshes and shapes as well as math
-bevy = { version = "0.9", features = ["render"] }
+bevy = { version = "0.10", features = ["bevy_render"] }
 # This crate is used to triangulate polygons.
 triangulate = "0.1.0"
 
 [dev-dependencies]
 # For the showcase we need the full capabilities of the engine.
-bevy = "0.9"
+bevy = "0.10"
 # First person camera controller
-smooth-bevy-cameras = "0.6"
+smooth-bevy-cameras = "0.8"
