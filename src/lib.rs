@@ -5,22 +5,11 @@ pub mod polygon;
 pub mod torus;
 pub(crate) mod util;
 
-/// Settings that apply to all shapes.
-pub struct GenerationSettings {
-    pub uvs: bool,
-    pub normals: bool,
-    /// Duplicate some vertices when it allows easier texturing
-    pub duplicate_vertices: bool,
-}
-
-impl Default for GenerationSettings {
-    fn default() -> Self {
-        Self {
-            uvs: true,
-            normals: true,
-            duplicate_vertices: true,
-        }
-    }
+struct MeshData {
+    positions: Vec<[f32; 3]>,
+    normals: Vec<[f32; 3]>,
+    uvs: Vec<[f32; 2]>,
+    indices: Vec<u32>,
 }
 
 pub use crate::cone::Cone;

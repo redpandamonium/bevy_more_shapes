@@ -196,12 +196,25 @@ fn spawn_shapes(
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Torus {
             radius: 0.8,
-            ring_radius: 0.2,
-            horizontal_segments: 8,
-            vertical_segments: 5,
+            tube_radius: 0.2,
+            radial_segments: 8,
+            tube_segments: 5,
+            ..Default::default()
         })),
         material: materials.add(StandardMaterial::from(Color::PINK)),
         transform: Transform::from_xyz(8.0, 0.0, 7.0),
+        ..Default::default()
+    });
+
+    // Thick torus
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(Torus {
+            radius: 0.5,
+            tube_radius: 0.3,
+            ..Default::default()
+        })),
+        material: materials.add(StandardMaterial::from(Color::NAVY)),
+        transform: Transform::from_xyz(8.0, 0.0, 9.0),
         ..Default::default()
     });
 
@@ -209,9 +222,68 @@ fn spawn_shapes(
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Torus::default())),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
-        transform: Transform::from_xyz(8.0, 0.0, 9.0),
+        transform: Transform::from_xyz(8.0, 0.0, 11.0),
         ..Default::default()
     });
+
+    // Half torus
+    {
+        let mut mat = StandardMaterial::from(Color::CRIMSON);
+        mat.cull_mode = None;
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(Torus {
+                radius: 0.8,
+                tube_radius: 0.2,
+                radial_segments: 64,
+                tube_segments: 32,
+                radial_circumference: std::f32::consts::PI,
+                tube_circumference: std::f32::consts::TAU,
+            })),
+            material: materials.add(mat),
+            transform: Transform::from_xyz(10.0, 0.0, 5.0),
+            ..Default::default()
+        });
+    }
+
+    // Half torus (horizontal cut)
+    {
+        let mut mat = StandardMaterial::from(Color::ORANGE_RED);
+        mat.cull_mode = None;
+        let mut flipped_transform = Transform::from_xyz(10.0, 0.0, 7.0);
+        flipped_transform.rotation = Quat::from_rotation_x(std::f32::consts::PI);
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(Torus {
+                radius: 0.8,
+                tube_radius: 0.2,
+                radial_segments: 64,
+                tube_segments: 32,
+                radial_circumference: std::f32::consts::TAU,
+                tube_circumference: std::f32::consts::PI,
+            })),
+            material: materials.add(mat),
+            transform: flipped_transform,
+            ..Default::default()
+        });
+    }
+
+    // 2/3 torus with texture
+    {
+        let mut mat = StandardMaterial::from(checkerboard_texture.clone());
+        mat.cull_mode = None;
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(Mesh::from(Torus {
+                radius: 0.8,
+                tube_radius: 0.2,
+                radial_segments: 64,
+                tube_segments: 32,
+                radial_circumference: std::f32::consts::PI * 4.0/3.0,
+                tube_circumference: std::f32::consts::TAU,
+            }))),
+            material: materials.add(mat),
+            transform: Transform::from_xyz(10.0, 0.0, 9.0),
+            ..Default::default()
+        });
+    }
 
     // Sun
     commands.spawn(DirectionalLightBundle {
