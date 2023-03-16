@@ -25,10 +25,96 @@ impl Default for Torus {
     }
 }
 
+pub struct TorusSegment {
+    /// Torus settings
+    pub torus: Torus,
+    /// Angle size of the segment in radians (2pi being a full torus, pi being half)
+    pub angle_radians: f32,
+    /// Whether or not to cap off the ends
+    pub close_ends: bool,
+}
+
+impl Default for TorusSegment {
+    fn default() -> Self {
+        Self {
+            torus: Default::default(),
+            angle_radians: 2.0 * std::f32::consts::TAU,
+        }
+    }
+}
+
+fn generate_torus_segment(torus: TorusSegment) -> Mesh {
+
+    // This code is based on http://apparat-engine.blogspot.com/2013/04/procedural-meshes-torus.html
+
+    let num_vertices = (torus.horizontal_segments + 1) * (torus.vertical_segments + 1);
+    let mut positions : Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
+    let mut normals : Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
+    let mut uvs : Vec<[f32; 2]> = Vec::with_capacity(num_vertices);
+    let mut indices = Vec::with_capacity(torus.horizontal_segments * torus.vertical_segments * 6);
+
+    let angle_step_vertical = std::f32::consts::TAU / torus.vertical_segments as f32;
+    let angle_step_horizontal = std::f32::consts::TAU / torus.horizontal_segments as f32;
+
+    // Add vertices ring by ring
+    for horizontal_idx in 0..=torus.horizontal_segments {
+
+        let theta_horizontal = angle_step_horizontal * horizontal_idx as f32;
+
+        // The center of the vertical ring
+        let ring_center = Vec3::new(
+            torus.radius * f32::cos(theta_horizontal),
+            0.0,
+            torus.radius * f32::sin(theta_horizontal)
+        );
+
+        for vertical_idx in 0..=torus.vertical_segments {
+
+            let theta_vertical = angle_step_vertical * vertical_idx as f32;
+            let position = Vec3::new(
+                f32::cos(theta_horizontal) * (torus.radius + torus.ring_radius * f32::cos(theta_vertical)),
+                f32::sin(theta_vertical) * torus.ring_radius,
+                f32::sin(theta_horizontal) * (torus.radius + torus.ring_radius * f32::cos(theta_vertical)),
+            );
+            // The normal points from the radius 0 torus to the actual point
+            let normal = (position - ring_center).normalize();
+            positions.push(position.to_array());
+            normals.push(normal.to_array());
+
+            // Since the segments are basically a deformed grid, we can overlay that onto the UV space
+            let u = 1.0 / torus.horizontal_segments as f32 * horizontal_idx as f32;
+            let v = 1.0 / torus.vertical_segments as f32 * vertical_idx as f32;
+            uvs.push([u, v]);
+        }
+    }
+
+    // Add indices for each face
+    for horizontal_idx in 0..torus.horizontal_segments {
+
+        let ring0_base_idx = horizontal_idx * (torus.vertical_segments + 1);
+        let ring1_base_idx = (horizontal_idx + 1) * (torus.vertical_segments + 1);
+
+        for vertical_idx in 0..torus.vertical_segments {
+            let face = FlatTrapezeIndices {
+                lower_left: (ring0_base_idx + vertical_idx) as u32,
+                upper_left: (ring0_base_idx + vertical_idx + 1) as u32,
+                lower_right: (ring1_base_idx + vertical_idx) as u32,
+                upper_right: (ring1_base_idx + vertical_idx + 1) as u32,
+            };
+            face.generate_triangles(&mut indices);
+        }
+    }
+
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+    mesh.set_indices(Some(Indices::U32(indices)));
+    mesh
+}
+
 impl From<Torus> for Mesh {
     fn from(torus: Torus) -> Mesh {
-
-        // This code is based on http://apparat-engine.blogspot.com/2013/04/procedural-meshes-torus.html
 
         // Input parameter validation
         assert!(torus.radius > 0.0, "The radii of a torus must be positive");
@@ -36,69 +122,21 @@ impl From<Torus> for Mesh {
         assert!(torus.horizontal_segments >= 3, "3 segments are needed to produce a closed shape.");
         assert!(torus.vertical_segments >= 3, "3 segments are needed to produce a closed shape.");
 
-        let num_vertices = (torus.horizontal_segments + 1) * (torus.vertical_segments + 1);
-        let mut positions : Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
-        let mut normals : Vec<[f32; 3]> = Vec::with_capacity(num_vertices);
-        let mut uvs : Vec<[f32; 2]> = Vec::with_capacity(num_vertices);
-        let mut indices = Vec::with_capacity(torus.horizontal_segments * torus.vertical_segments * 6);
+        generate_torus_segment(TorusSegment {
+            torus,
+            angle_radians: std::f32::consts::TAU,
+        })
+    }
+}
 
-        let angle_step_vertical = 2.0 * std::f32::consts::PI / torus.vertical_segments as f32;
-        let angle_step_horizontal = 2.0 * std::f32::consts::PI / torus.horizontal_segments as f32;
+impl From<TorusSegment> for Mesh {
+    fn from(torus: TorusSegment) -> Self {
 
-        // Add vertices ring by ring
-        for horizontal_idx in 0..=torus.horizontal_segments {
+        // Input parameter validation
+        assert!(torus.radius > 0.0, "The radii of a torus must be positive");
+        assert!(torus.ring_radius > 0.0, "The radii of a torus must be positive");
+        assert!(torus.vertical_segments >= 3, "3 segments are needed to produce a closed shape.");
 
-            let theta_horizontal = angle_step_horizontal * horizontal_idx as f32;
-
-            // The center of the vertical ring
-            let ring_center = Vec3::new(
-                torus.radius * f32::cos(theta_horizontal),
-                0.0,
-                torus.radius * f32::sin(theta_horizontal)
-            );
-
-            for vertical_idx in 0..=torus.vertical_segments {
-
-                let theta_vertical = angle_step_vertical * vertical_idx as f32;
-                let position = Vec3::new(
-                    f32::cos(theta_horizontal) * (torus.radius + torus.ring_radius * f32::cos(theta_vertical)),
-                    f32::sin(theta_vertical) * torus.ring_radius,
-                    f32::sin(theta_horizontal) * (torus.radius + torus.ring_radius * f32::cos(theta_vertical)),
-                );
-                // The normal points from the radius 0 torus to the actual point
-                let normal = (position - ring_center).normalize();
-                positions.push(position.to_array());
-                normals.push(normal.to_array());
-
-                // Since the segments are basically a deformed grid, we can overlay that onto the UV space
-                let u = 1.0 / torus.horizontal_segments as f32 * horizontal_idx as f32;
-                let v = 1.0 / torus.vertical_segments as f32 * vertical_idx as f32;
-                uvs.push([u, v]);
-            }
-        }
-
-        // Add indices for each face
-        for horizontal_idx in 0..torus.horizontal_segments {
-
-            let ring0_base_idx = horizontal_idx * (torus.vertical_segments + 1);
-            let ring1_base_idx = (horizontal_idx + 1) * (torus.vertical_segments + 1);
-
-            for vertical_idx in 0..torus.vertical_segments {
-                let face = FlatTrapezeIndices {
-                    lower_left: (ring0_base_idx + vertical_idx) as u32,
-                    upper_left: (ring0_base_idx + vertical_idx + 1) as u32,
-                    lower_right: (ring1_base_idx + vertical_idx) as u32,
-                    upper_right: (ring1_base_idx + vertical_idx + 1) as u32,
-                };
-                face.generate_triangles(&mut indices);
-            }
-        }
-
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-        mesh.set_indices(Some(Indices::U32(indices)));
-        mesh
+        generate_torus_segment(torus)
     }
 }
