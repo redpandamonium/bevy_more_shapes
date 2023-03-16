@@ -1,11 +1,10 @@
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 use bevy::math::{Rect, Vec2, Vec3};
 use bevy::prelude::Mesh;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use std::marker::PhantomData;
-use triangulate::builders::VecIndexedListBuilder;
-use triangulate::{
-    FanBuilder, ListBuilder, PolygonList, TriangleWinding, Triangulate, TriangulationError, Vertex,
-};
+use triangulate::{ListFormat, TriangulationError, Vertex};
+use triangulate::formats::IndexedListFormat;
 
 pub struct Polygon {
     /// Points on a path where the last and first point are connected to form a closed circle.
@@ -86,71 +85,42 @@ impl Vertex for Vec2f {
     }
 }
 
-// This is a drop-in replacement for triangulate::builders::FanToListAdapter.
-// The only difference is that it specifies the triangles in reverse winding to match what wpgu expects of its index buffer.
-struct CustomWindingFanToListAdapter<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> {
-    list_builder: LB,
-    vi0: P::Index,
-    vi1: P::Index,
-    _a: PhantomData<&'a ()>,
-}
+/// The input must not be empty.
+/// No edge can cross any other edge, whether it is on the same polygon or not.
+/// Each vertex must be part of exactly two edges. Polygons cannot 'share' vertices with each other.
+/// Each vertex must be distinct - no vertex can have x and y coordinates that both compare equal to another vertex's.
+#[derive(Debug)]
+pub struct InvalidInput;
 
-impl<'a, P: PolygonList<'a>, LB: ListBuilder<'a, P>> FanBuilder<'a, P>
-    for CustomWindingFanToListAdapter<'a, P, LB>
-{
-    type Initializer = LB::Initializer;
-    type Output = LB::Output;
-    type Error = LB::Error;
-
-    const WINDING: TriangleWinding = LB::WINDING;
-
-    fn new(
-        initializer: Self::Initializer,
-        polygon_list: P,
-        vi0: P::Index,
-        vi1: P::Index,
-        vi2: P::Index,
-    ) -> Result<Self, Self::Error>
-    where
-        Self: Sized,
-    {
-        let mut list_builder = LB::new(initializer, polygon_list)?;
-        list_builder.add_triangle(vi0.clone(), vi2.clone(), vi1)?;
-        Ok(Self {
-            list_builder,
-            vi0,
-            vi1: vi2,
-            _a: PhantomData,
-        })
-    }
-
-    fn new_fan(&mut self, vi0: P::Index, vi1: P::Index, vi2: P::Index) -> Result<(), Self::Error> {
-        self.vi0 = vi0.clone();
-        self.vi1 = vi2.clone();
-        self.list_builder.add_triangle(vi0, vi2, vi1)
-    }
-
-    fn extend_fan(&mut self, vi: P::Index) -> Result<(), Self::Error> {
-        let vi1 = std::mem::replace(&mut self.vi1, vi.clone());
-        self.list_builder.add_triangle(self.vi0.clone(), vi, vi1)
-    }
-
-    fn build(self) -> Result<Self::Output, Self::Error> {
-        self.list_builder.build()
-    }
-
-    fn fail(self, error: &TriangulationError<Self::Error>) {
-        self.list_builder.fail(error);
+impl Display for InvalidInput {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Invalid polygon input")
     }
 }
 
-impl From<Polygon> for Mesh {
-    fn from(polygon: Polygon) -> Self {
-        // Input parameter validation
-        assert!(
-            polygon.points.len() >= 3,
-            "At least 3 points are needed to produce a closed shape."
-        );
+impl Error for InvalidInput { }
+
+impl<T: Error> From<TriangulationError<T>> for InvalidInput {
+    fn from(value: TriangulationError<T>) -> Self {
+        match value {
+            TriangulationError::TrapezoidationError(_) => panic!("Failed to triangulate: {}", value),
+            TriangulationError::NoVertices => Self,
+            TriangulationError::InternalError(_) => Self,
+            TriangulationError::FanBuilder(_) => panic!("Failed to triangulate: {}", value),
+            _ => panic!("Failed to triangulate: {}", value),
+        }
+    }
+}
+
+impl TryFrom<Polygon> for Mesh {
+
+    type Error = InvalidInput;
+
+    fn try_from(polygon: Polygon) -> Result<Self, Self::Error> {
+
+        if polygon.points.len() < 3 {
+            return Err(InvalidInput);
+        }
 
         let mut positions: Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
         let mut normals: Vec<[f32; 3]> = Vec::with_capacity(polygon.points.len());
@@ -177,13 +147,14 @@ impl From<Polygon> for Mesh {
             .into_iter()
             .map(|v| Vec2f(v))
             .collect::<Vec<Vec2f>>();
-        let mut null_obj = vec![];
-        let result = polygons
-            .triangulate::<CustomWindingFanToListAdapter<_, VecIndexedListBuilder<_>>>(
-                &mut null_obj,
-            )
-            .unwrap();
-        let indices = result.iter().map(|i| *i as u32).collect();
+        let mut output = Vec::<[usize; 3]>::new();
+        let format = IndexedListFormat::new(&mut output).into_fan_format();
+        triangulate::Polygon::triangulate(&polygons, format)?;
+        let indices = output.into_iter()
+            .map(|[a, b, c]| [c, b, a])
+            .flatten()
+            .map(|v| v as u32)
+            .collect();
 
         // Put the mesh together
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
@@ -191,6 +162,6 @@ impl From<Polygon> for Mesh {
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.set_indices(Some(Indices::U32(indices)));
-        mesh
+        Ok(mesh)
     }
 }

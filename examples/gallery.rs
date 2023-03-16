@@ -153,7 +153,7 @@ fn spawn_shapes(
 
     // Triangle polygon
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Polygon::new_triangle(0.7))),
+        mesh: meshes.add(Mesh::try_from(Polygon::new_triangle(0.7)).unwrap()),
         material: materials.add(StandardMaterial::from(Color::GREEN)),
         transform: Transform::from_xyz(6.0, 0.0, 5.0),
         ..Default::default()
@@ -161,7 +161,7 @@ fn spawn_shapes(
 
     // Octagon polygon
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Polygon::new_octagon(0.7))),
+        mesh: meshes.add(Mesh::try_from(Polygon::new_octagon(0.7)).unwrap()),
         material: materials.add(StandardMaterial::from(Color::SEA_GREEN)),
         transform: Transform::from_xyz(6.0, 0.0, 7.0),
         ..Default::default()
@@ -169,7 +169,7 @@ fn spawn_shapes(
 
     // Many-cornered polygon
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Polygon::new_regular_ngon(0.7, 32))),
+        mesh: meshes.add(Mesh::try_from(Polygon::new_regular_ngon(0.7, 32)).unwrap()),
         material: materials.add(StandardMaterial::from(Color::YELLOW)),
         transform: Transform::from_xyz(6.0, 0.0, 9.0),
         ..Default::default()
@@ -177,9 +177,9 @@ fn spawn_shapes(
 
     // Star
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Polygon {
+        mesh: meshes.add(Mesh::try_from(Polygon {
             points: generate_star_shape(7, 0.7, 0.4),
-        })),
+        }).unwrap()),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
         transform: Transform::from_xyz(6.0, 0.0, 11.0),
         ..Default::default()
