@@ -12,6 +12,17 @@ struct MeshData {
     indices: Vec<u32>,
 }
 
+impl MeshData {
+    fn new(num_vertices: usize, num_indices: usize) -> Self {
+        Self {
+            positions: Vec::with_capacity(num_vertices as usize),
+            normals: Vec::with_capacity(num_vertices as usize),
+            uvs: Vec::with_capacity(num_vertices as usize),
+            indices: Vec::with_capacity(num_indices as usize),
+        }
+    }
+}
+
 pub use crate::cone::Cone;
 pub use crate::cylinder::Cylinder;
 pub use crate::grid::Grid;

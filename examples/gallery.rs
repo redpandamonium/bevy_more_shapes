@@ -63,7 +63,7 @@ fn spawn_shapes(
         mesh: meshes.add(Mesh::from(Cone {
             radius: 0.8,
             height: 2.0,
-            subdivisions: 32,
+            segments: 32,
         })),
         material: materials.add(StandardMaterial::from(Color::YELLOW_GREEN)),
         transform: Transform::from_xyz(0.0, 0.0, 7.0),

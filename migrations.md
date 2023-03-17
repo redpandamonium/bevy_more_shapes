@@ -15,3 +15,6 @@ If a version is not in here, there were no breaking changes.
 * The cylinder shape supports height segments now. Default is 1 which is the old behavior.
 * The cylinder UVs have been reworked to make more sense
 * The cylinder normals have been fixed to account for the slope on irregular cylinders
+* Cone segment parameter was renamed
+* Cone UVs were redone to make more sense
+* Cone normals have been fixed to account for the slope

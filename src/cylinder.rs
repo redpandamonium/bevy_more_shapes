@@ -88,7 +88,7 @@ fn add_bottom(mesh: &mut MeshData, cylinder: &Cylinder) {
     // Center
     let center_pos = Vec3::new(0.0, -cylinder.height / 2.0, 0.0);
     mesh.positions.push(center_pos.to_array());
-    mesh.uvs.push(uvs(center_pos));
+    mesh.uvs.push([0.5, 0.5]);
     mesh.normals.push((-Vec3::Y).to_array());
 
     // Vertices
@@ -166,25 +166,6 @@ fn add_body(mesh: &mut MeshData, cylinder: &Cylinder) {
     }
 }
 
-// https://en.wikipedia.org/wiki/UV_mapping
-fn sphere_coordinates(sphere_coord: Vec3) -> [f32; 2] {
-    let u = 0.5 + (f32::atan2(sphere_coord.x, sphere_coord.z) / (2.0 * std::f32::consts::PI));
-    let v = 0.5 + f32::asin(sphere_coord.y) / std::f32::consts::PI;
-    [u, v]
-}
-
-fn uvs(pos: Vec3) -> [f32; 2] {
-    let mut uv = sphere_coordinates(pos);
-    uv[0] = if uv[0] < 0.0 {
-        1.0 - uv[0]
-    } else if uv[0] > 1.0 {
-        uv[0] - 1.0
-    } else {
-        uv[0]
-    };
-    uv
-}
-
 impl From<Cylinder> for Mesh {
     fn from(cylinder: Cylinder) -> Self {
 
@@ -197,23 +178,11 @@ impl From<Cylinder> for Mesh {
         assert!(cylinder.height_segments >= 1, "Must have at least one height segment.");
         assert!(cylinder.height > 0.0, "Must have positive height");
 
-        // Vertex order in the buffer:
-        // 1: n_subdivisions top face
-        // 2: n_subdivisions bottom face
-        // 3: n_subdivisions top outer ring
-        // 4: n_subdivisions bottom outer ring
-        // 5: top mid vertex
-        // 6: bottom mid vertex
+        let num_vertices = (cylinder.radial_segments + 1) * (cylinder.height_segments + 3) + 2;
+        // top&bottom + body
+        let num_indices = cylinder.radial_segments * 3 * 2 + cylinder.radial_segments * cylinder.height_segments * 6;
 
-        let num_vertices = cylinder.radial_segments * 4 + 2;
-        let num_indices = cylinder.radial_segments * 2 * 6;
-
-        let mut mesh = MeshData {
-            positions: Vec::with_capacity(num_vertices as usize),
-            normals: Vec::with_capacity(num_vertices as usize),
-            uvs: Vec::with_capacity(num_vertices as usize),
-            indices: Vec::with_capacity(num_indices as usize),
-        };
+        let mut mesh = MeshData::new(num_vertices as usize, num_indices as usize);
 
         add_top(&mut mesh, &cylinder);
         add_bottom(&mut mesh, &cylinder);
