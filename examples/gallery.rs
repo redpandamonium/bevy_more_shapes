@@ -5,7 +5,6 @@ use bevy::math::Vec3;
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 use bevy::pbr::{AmbientLight, DirectionalLight, NotShadowCaster, PbrBundle, StandardMaterial};
 use bevy::prelude::*;
-use bevy::render::mesh::shape::Icosphere;
 use bevy::render::settings::{WgpuFeatures, WgpuSettings};
 use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::ui::{AlignSelf, PositionType, Style, Val};
@@ -93,7 +92,8 @@ fn spawn_shapes(
             height: 1.0,
             radius_bottom: 0.5,
             radius_top: 0.5,
-            subdivisions: 3,
+            radial_segments: 3,
+            height_segments: 1,
         })),
         material: materials.add(StandardMaterial::from(Color::OLIVE)),
         transform: Transform::from_xyz(2.0, 0.0, 11.0),
@@ -101,12 +101,16 @@ fn spawn_shapes(
     });
 
     // Default cylinder
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Cylinder::default())),
-        material: materials.add(StandardMaterial::from(Color::CRIMSON)),
-        transform: Transform::from_xyz(2.0, 0.0, 5.0),
-        ..Default::default()
-    });
+    {
+        let mut mat = StandardMaterial::from(Color::CRIMSON);
+        mat.cull_mode = None;
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(Cylinder::default())),
+            material: materials.add(mat),
+            transform: Transform::from_xyz(2.0, 0.0, 5.0),
+            ..Default::default()
+        });
+    }
 
     // Taller regular cylinder
     commands.spawn(PbrBundle {
@@ -122,10 +126,25 @@ fn spawn_shapes(
             height: 1.0,
             radius_bottom: 0.6,
             radius_top: 0.2,
-            subdivisions: 40,
+            radial_segments: 64,
+            height_segments: 1,
         })),
         material: materials.add(StandardMaterial::from(Color::ORANGE_RED)),
         transform: Transform::from_xyz(2.0, 0.0, 9.0),
+        ..Default::default()
+    });
+
+    // Height segmented cylinder
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cylinder {
+            height: 1.0,
+            radius_bottom: 0.3,
+            radius_top: 0.5,
+            radial_segments: 32,
+            height_segments: 5,
+        })),
+        material: materials.add(StandardMaterial::from(Color::SEA_GREEN)),
+        transform: Transform::from_xyz(2.0, 0.0, 15.0),
         ..Default::default()
     });
 
