@@ -3,7 +3,7 @@ use bevy::asset::{AssetServer, Assets};
 use bevy::input::Input;
 use bevy::math::Vec3;
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
-use bevy::pbr::{AmbientLight, DirectionalLight, PbrBundle, StandardMaterial};
+use bevy::pbr::{AmbientLight, DirectionalLight, NotShadowCaster, PbrBundle, StandardMaterial};
 use bevy::prelude::*;
 use bevy::render::mesh::shape::Icosphere;
 use bevy::render::settings::{WgpuFeatures, WgpuSettings};
@@ -32,6 +32,7 @@ fn spawn_shapes(
     // Start out without wireframes, but you can toggle them.
     wireframe_config.global = false;
 
+    /*
     // Comparison: Builtin sphere
     let mut sphere = Icosphere::default();
     sphere.radius = 0.5;
@@ -48,6 +49,8 @@ fn spawn_shapes(
         ..Default::default()
     });
 
+     */
+
     // Default cone
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
@@ -56,11 +59,23 @@ fn spawn_shapes(
         ..Default::default()
     });
 
+    // Big cone
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cone {
+            radius: 0.8,
+            height: 2.0,
+            subdivisions: 32,
+        })),
+        material: materials.add(StandardMaterial::from(Color::YELLOW_GREEN)),
+        transform: Transform::from_xyz(0.0, 0.0, 7.0),
+        ..Default::default()
+    });
+
     // Textured cone
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
-        transform: Transform::from_xyz(0.0, 0.0, 7.0),
+        transform: Transform::from_xyz(0.0, 0.0, 9.0),
         ..Default::default()
     });
 
@@ -291,6 +306,22 @@ fn spawn_shapes(
 
     // Ambient light
     ambient_light.brightness = 0.2;
+
+    // Sky
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::default())),
+            material: materials.add(StandardMaterial {
+                base_color: Color::hex("111111").unwrap(),
+                unlit: true,
+                cull_mode: None,
+                ..default()
+            }),
+            transform: Transform::from_scale(Vec3::splat(50.0)),
+            ..default()
+        },
+        NotShadowCaster,
+    ));
 }
 
 fn generate_star_shape(n: usize, radius_big: f32, radius_small: f32) -> Vec<Vec2> {

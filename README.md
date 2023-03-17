@@ -1,6 +1,8 @@
 # bevy_more_shapes
 ![crates.io](https://img.shields.io/crates/v/bevy_more_shapes.svg)
 
+![Gallery Screenshot](assets/screenshots/screenshot.png)
+
 More shapes for the bevy game engine. This plugin adds more procedural geometry shapes for bevy.
 It works exactly like the default bevy shapes. 
 
