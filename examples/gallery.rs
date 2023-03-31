@@ -11,17 +11,17 @@ use bevy::ui::{AlignSelf, PositionType, Style, Val};
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::DefaultPlugins;
 use bevy::render::RenderPlugin;
+use bevy_normal_material::prelude::{NormalMaterial, NormalMaterialPlugin};
 use bevy_more_shapes::torus::Torus;
 use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
-use smooth_bevy_cameras::controllers::fps::{
-    FpsCameraBundle, FpsCameraController, FpsCameraPlugin,
-};
+use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
 
 // Spawns the actual gallery of shapes. Spawns a row for each type in z+ direction.
 fn spawn_shapes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut normal_materials: ResMut<Assets<NormalMaterial>>,
     mut wireframe_config: ResMut<WireframeConfig>,
     mut ambient_light: ResMut<AmbientLight>,
     asset_server: Res<AssetServer>,
@@ -51,9 +51,9 @@ fn spawn_shapes(
      */
 
     // Default cone
-    commands.spawn(PbrBundle {
+    commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
-        material: materials.add(StandardMaterial::from(Color::GOLD)),
+        material: normal_materials.add(NormalMaterial::default()),
         transform: Transform::from_xyz(0.0, 0.0, 5.0),
         ..Default::default()
     });
@@ -121,7 +121,7 @@ fn spawn_shapes(
     });
 
     // Irregular cylinder
-    commands.spawn(PbrBundle {
+    commands.spawn(MaterialMeshBundle {
         mesh: meshes.add(Mesh::from(Cylinder {
             height: 1.0,
             radius_bottom: 0.6,
@@ -129,7 +129,7 @@ fn spawn_shapes(
             radial_segments: 64,
             height_segments: 1,
         })),
-        material: materials.add(StandardMaterial::from(Color::ORANGE_RED)),
+        material: normal_materials.add(NormalMaterial::default()),
         transform: Transform::from_xyz(2.0, 0.0, 9.0),
         ..Default::default()
     });
@@ -287,6 +287,7 @@ fn spawn_shapes(
             mesh: meshes.add(Mesh::from(Torus {
                 radial_circumference: std::f32::consts::TAU,
                 tube_circumference: std::f32::consts::PI,
+                tube_offset: std::f32::consts::PI * 1.5,
                 ..Default::default()
             })),
             material: materials.add(mat),
@@ -546,6 +547,7 @@ fn main() {
         .add_plugin(FpsCameraPlugin::default())
         .add_plugin(WireframePlugin)
         .add_plugin(MouseLockPlugin)
+        .add_plugin(NormalMaterialPlugin)
         .add_startup_system(spawn_camera)
         .add_startup_system(spawn_shapes)
         .add_startup_system(spawn_info_text)
