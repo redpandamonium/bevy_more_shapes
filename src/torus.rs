@@ -17,6 +17,10 @@ pub struct Torus {
     pub radial_circumference: f32,
     /// Circumference in radians of the individual ring segments. 2pi for a closed tube.
     pub tube_circumference: f32,
+    /// The offset in radians of where on the circle the torus begins. Ignored if radial_circumference is 2pi.
+    pub radial_offset: f32,
+    /// The offset in radians of where the tube begins on its circle. Ignored if tube_circumference is 2pi.
+    pub tube_offset: f32,
 }
 
 impl Default for Torus {
@@ -28,6 +32,8 @@ impl Default for Torus {
             tube_segments: 32,
             radial_circumference: std::f32::consts::TAU,
             tube_circumference: std::f32::consts::TAU,
+            radial_offset: 0.0,
+            tube_offset: 0.0,
         }
     }
 }
@@ -44,6 +50,14 @@ impl From<Torus> for Mesh {
         assert!(torus.tube_circumference > 0.0, "Tube circumference must be positive");
         assert!(torus.radial_circumference <= std::f32::consts::TAU, "Radial circumference must not exceed 2pi radians");
         assert!(torus.tube_circumference <= std::f32::consts::TAU, "Tube circumference must not exceed 2pi radians");
+        if torus.radial_circumference < std::f32::consts::TAU {
+            assert!(torus.radial_offset >= 0.0, "Radial offset must be between 0 and 2pi");
+            assert!(torus.radial_offset <= std::f32::consts::TAU, "Radial offset must be between 0 and 2pi");
+        }
+        if torus.tube_radius < std::f32::consts::TAU {
+            assert!(torus.tube_radius >= 0.0, "Tube offset must be between 0 and 2pi");
+            assert!(torus.tube_radius <= std::f32::consts::TAU, "Tube offset must be between 0 and 2pi");
+        }
 
         let num_vertices = (torus.radial_segments + 1) * (torus.tube_segments + 1);
         let mut mesh = MeshData {
@@ -74,7 +88,7 @@ fn generate_torus_body(mesh: &mut MeshData, torus: &Torus) {
     // Add vertices ring by ring
     for horizontal_idx in 0..=torus.radial_segments {
 
-        let theta_horizontal = angle_step_horizontal * horizontal_idx as f32;
+        let theta_horizontal = angle_step_horizontal * horizontal_idx as f32 + torus.radial_offset;
 
         // The center of the vertical ring
         let ring_center = Vec3::new(
@@ -85,7 +99,7 @@ fn generate_torus_body(mesh: &mut MeshData, torus: &Torus) {
 
         for vertical_idx in 0..=torus.tube_segments {
 
-            let theta_vertical = angle_step_vertical * vertical_idx as f32;
+            let theta_vertical = angle_step_vertical * vertical_idx as f32 + torus.tube_offset;
 
             let position = Vec3::new(
                 f32::cos(theta_horizontal) * (torus.radius + torus.tube_radius * f32::cos(theta_vertical)),
