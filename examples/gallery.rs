@@ -15,11 +15,11 @@ use bevy_normal_material::prelude::{NormalMaterial, NormalMaterialPlugin};
 use bevy_more_shapes::torus::Torus;
 use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
 use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
-use bevy_more_shapes::tube::{Curve, Tube};
+use bevy_more_shapes::tube::{CurveFunction, Curve};
 
 struct WaveFunction;
 
-impl Curve for WaveFunction {
+impl CurveFunction for WaveFunction {
     fn eval_at(&self, t: f32) -> Vec3 {
         Vec3::new(
             -f32::sin(t * std::f32::consts::PI * 2.0) * 0.2,
@@ -34,7 +34,7 @@ struct Knot {
     circle_winds: u32,
 }
 
-impl Curve for Knot {
+impl CurveFunction for Knot {
     fn eval_at(&self, mut t: f32) -> Vec3 {
 
         t *= std::f32::consts::TAU * 2.0;
@@ -365,7 +365,7 @@ fn spawn_shapes(
         mat.cull_mode = None;
 
         commands.spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(Tube {
+            mesh: meshes.add(Mesh::from(Curve {
                 curve: Box::new(WaveFunction),
                 ..Default::default()
             })),
@@ -377,7 +377,7 @@ fn spawn_shapes(
 
     // Knot
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(Tube {
+        mesh: meshes.add(Mesh::from(Curve {
             curve: Box::new(Knot {
                 rotation_winds: 2,
                 circle_winds: 3,
@@ -397,7 +397,7 @@ fn spawn_shapes(
         mat.cull_mode = None;
 
         commands.spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(Tube {
+            mesh: meshes.add(Mesh::from(Curve {
                 curve: Box::new(Knot {
                     rotation_winds: 2,
                     circle_winds: 3,
@@ -418,7 +418,7 @@ fn spawn_shapes(
         mat.cull_mode = None;
 
         commands.spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(Tube {
+            mesh: meshes.add(Mesh::from(Curve {
                 radius: 0.2,
                 radial_segments: 1,
                 curve: Box::new(WaveFunction),

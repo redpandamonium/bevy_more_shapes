@@ -4,7 +4,10 @@ use bevy::render::mesh::{Indices, PrimitiveTopology};
 use crate::MeshData;
 use crate::util::{Extent, FlatTrapezeIndices};
 
-pub trait Curve {
+/// A curve is some math function in 3d.
+/// It is defined at least in the domain [0, 1].
+/// The parameter t is the offset in that [0, 1] range which is sampled uniformly by the library to create frames.
+pub trait CurveFunction {
 
     /// Evaluate the curve at some point along it.
     fn eval_at(&self, t: f32) -> Vec3;
@@ -28,7 +31,7 @@ pub trait Curve {
 /// Users are expected to bring their own curve implementations.
 struct DefaultCurve;
 
-impl Curve for DefaultCurve {
+impl CurveFunction for DefaultCurve {
     fn eval_at(&self, t: f32) -> Vec3 {
         assert!(t >= 0.0);
         assert!(t <= 1.0);
@@ -40,18 +43,30 @@ impl Curve for DefaultCurve {
     }
 }
 
-pub struct Tube {
+/// A curve is a shape that follows a curve function.
+/// It can be 3 things: A tube, a line, or a ribbon.
+/// To create a ribbon simple set <3 radial segments.
+/// To create a line set the radius to 0.
+/// Everything else is interpreted as a curve.
+pub struct Curve {
+    /// Radius of the tube. Set to 0 for a line.
     pub radius: f32,
-    pub curve: Box<dyn Curve>,
+    /// Underlying curve function to track
+    pub curve: Box<dyn CurveFunction>,
+    /// Number of samples taken from the curve function
     pub length_segments: u32,
+    /// Number of segments around the tube. Set to 1 or 2 to create a ribbon (1 single-sided, 2 double-sided).
     pub radial_segments: u32,
+    /// The circumference around the tube. If this is less than 2pi the tube will be open.
     pub radial_circumference: f32,
+    /// The offset in radians on the tube radius.
+    /// For ribbons this specifies the orientation of the ribbon against the function line.
     pub radial_offset: f32,
 }
 
-impl Default for Tube {
+impl Default for Curve {
     fn default() -> Self {
-        Tube {
+        Curve {
             radius: 0.05,
             curve: Box::new(DefaultCurve), // straight line
             length_segments: 64,
@@ -94,7 +109,7 @@ fn initial_normal(tangent: Vec3) -> Vec3 {
     normal
 }
 
-fn initial_frame(curve: &dyn Curve) -> FrenetSerretFrame {
+fn initial_frame(curve: &dyn CurveFunction) -> FrenetSerretFrame {
 
     let origin = curve.eval_at(0.0);
     let tangent = curve.tangent_at(0.0);
@@ -109,7 +124,7 @@ fn initial_frame(curve: &dyn Curve) -> FrenetSerretFrame {
     }
 }
 
-fn calculate_frames(curve: &dyn Curve, num_frames: u32) -> Vec<FrenetSerretFrame> {
+fn calculate_frames(curve: &dyn CurveFunction, num_frames: u32) -> Vec<FrenetSerretFrame> {
 
     let mut out = Vec::with_capacity(num_frames as usize);
     let step = 1.0 / (num_frames - 1) as f32;
@@ -191,7 +206,7 @@ fn normalize_frames(frames: &mut [FrenetSerretFrame]) {
     }
 }
 
-fn add_tube_segment(mesh: &mut MeshData, frame: &FrenetSerretFrame, tube: &Tube, index: usize) {
+fn add_tube_segment(mesh: &mut MeshData, frame: &FrenetSerretFrame, tube: &Curve, index: usize) {
 
     let angle_step = tube.radial_circumference / tube.radial_segments as f32;
 
@@ -213,7 +228,7 @@ fn add_tube_segment(mesh: &mut MeshData, frame: &FrenetSerretFrame, tube: &Tube,
     }
 }
 
-fn add_ribbon_segment(mesh: &mut MeshData, frame: &FrenetSerretFrame, tube: &Tube, index: usize) {
+fn add_ribbon_segment(mesh: &mut MeshData, frame: &FrenetSerretFrame, tube: &Curve, index: usize) {
 
     let theta = tube.radial_offset + std::f32::consts::FRAC_PI_2;
     let sin = theta.sin();
@@ -269,7 +284,7 @@ fn normalize_positions(positions: &mut [Vec3]) {
     }
 }
 
-fn index_tube(mesh: &mut MeshData, tube: &Tube) {
+fn index_tube(mesh: &mut MeshData, tube: &Curve) {
     for j in 1..=tube.length_segments {
         for i in 1..=tube.radial_segments {
 
@@ -289,7 +304,7 @@ fn index_tube(mesh: &mut MeshData, tube: &Tube) {
     }
 }
 
-fn index_ribbon(mesh: &mut MeshData, tube: &Tube) {
+fn index_ribbon(mesh: &mut MeshData, tube: &Curve) {
     for ls in 0..tube.length_segments {
         for rs in 0..tube.radial_segments {
             let indices = FlatTrapezeIndices {
@@ -305,7 +320,7 @@ fn index_ribbon(mesh: &mut MeshData, tube: &Tube) {
 
 // The implementation of this algorithm is based on three.js.
 // https://github.com/mrdoob/three.js
-fn add_tube(mesh: &mut MeshData, tube: &Tube) {
+fn add_tube(mesh: &mut MeshData, tube: &Curve) {
 
     let mut frames = calculate_frames(tube.curve.deref(), tube.length_segments + 1);
     normalize_frames(frames.as_mut_slice());
@@ -327,7 +342,7 @@ fn add_tube(mesh: &mut MeshData, tube: &Tube) {
     }
 }
 
-fn make_line(tube: &Tube) -> Mesh {
+fn make_line(tube: &Curve) -> Mesh {
     let mut m = Mesh::new(PrimitiveTopology::LineStrip);
     let mut positions = Vec::with_capacity(tube.length_segments as usize + 1);
     let step = 1.0 / tube.length_segments as f32;
@@ -341,17 +356,19 @@ fn make_line(tube: &Tube) -> Mesh {
     m
 }
 
-impl From<Tube> for Mesh {
-    fn from(tube: Tube) -> Self {
+impl From<Curve> for Mesh {
+    fn from(tube: Curve) -> Self {
 
         assert!(tube.length_segments > 0, "Must have at least one length segment");
-        assert!(tube.radial_offset >= 0.0 && tube.radial_offset <= std::f32::consts::TAU, "Radial offset must be in [0, 2pi]");
-        assert!(tube.radial_circumference > 0.0 && tube.radial_circumference <= std::f32::consts::TAU, "Radial circumference must be in (0, 2pi]");
 
         // Special case: Tube should be a line
         if tube.radius.abs() < f32::EPSILON || tube.radial_segments == 0 {
             return make_line(&tube);
         }
+
+        assert!(tube.radial_segments > 0, "Must have at least one radial segment");
+        assert!(tube.radial_offset >= 0.0 && tube.radial_offset <= std::f32::consts::TAU, "Radial offset must be in [0, 2pi]");
+        assert!(tube.radial_circumference > 0.0 && tube.radial_circumference <= std::f32::consts::TAU, "Radial circumference must be in (0, 2pi]");
 
         let num_vertices = (tube.length_segments + 1) as usize * (tube.radial_segments + 1) as usize;
         let num_indices = tube.length_segments as usize * tube.radial_segments as usize * 6;
