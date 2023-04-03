@@ -1,7 +1,7 @@
 # bevy_more_shapes
 ![crates.io](https://img.shields.io/crates/v/bevy_more_shapes.svg)
 
-![Gallery Screenshot](https://github.com/redpandamonium/bevy_more_shapes/blob/b39f5efa481927e62c22ec8f8764ace1558f9644/assets/screenshots/screenshot.png)
+![Gallery Screenshot](https://github.com/redpandamonium/bevy_more_shapes/blob/97220661580d93c0e53ce1a0ae68cd02d4fa2cda/assets/screenshots/screenshot.png)
 
 More shapes for the bevy game engine. This plugin adds more procedural geometry shapes for bevy.
 It works exactly like the default bevy shapes. 
@@ -15,10 +15,12 @@ To run the example showcasing all the available shapes, run `cargo run --example
 * Grid planes
 * Arbitrary non-self-intersecting polygons
 * Torus (Including segmented torus)
+* Tubes that follow an arbitrary 3d curve
 
 ## Versions
 
-This crate tracks bevy's versions, meaning the API of this crate will only break when an API breaking version of bevy is released.
+This crate tracks bevy's versions. It also follows the semver standard.
+Below is a chart which versions of this crate are compatible with which bevy version:
 
 | Version | Bevy version |
 |---------|--------------|
@@ -30,7 +32,7 @@ This crate tracks bevy's versions, meaning the API of this crate will only break
 
 ## Known Issues
 
-The UV coordinates are correct but not always useful. Repeating textures make this better, but consider changing the UVs for your use-case.
+The normals on cones and cylinders aren't properly smoothly interpolated. 
 
 ## Contributing
 
