@@ -15,7 +15,7 @@ To run the example showcasing all the available shapes, run `cargo run --example
 * Grid planes
 * Arbitrary non-self-intersecting polygons
 * Torus (Including segmented torus)
-* Tubes that follow an arbitrary 3d curve
+* Arbitrary 3d curves (in the form of lines, ribbons, and tubes)
 
 ## Versions
 

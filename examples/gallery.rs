@@ -15,7 +15,7 @@ use bevy_normal_material::prelude::{NormalMaterial, NormalMaterialPlugin};
 use bevy_more_shapes::torus::Torus;
 use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
 use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
-use bevy_more_shapes::tube::{CurveFunction, Curve};
+use bevy_more_shapes::curve::{CurveFunction, Curve};
 
 struct WaveFunction;
 

@@ -3,7 +3,7 @@ pub mod cylinder;
 pub mod grid;
 pub mod polygon;
 pub mod torus;
-pub mod tube;
+pub mod curve;
 pub(crate) mod util;
 
 struct MeshData {
