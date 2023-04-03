@@ -15,6 +15,41 @@ use bevy_normal_material::prelude::{NormalMaterial, NormalMaterialPlugin};
 use bevy_more_shapes::torus::Torus;
 use bevy_more_shapes::{Cone, Cylinder, Grid, Polygon};
 use smooth_bevy_cameras::controllers::fps::{FpsCameraBundle, FpsCameraController, FpsCameraPlugin};
+use bevy_more_shapes::tube::{Curve, Tube};
+
+struct WaveFunction;
+
+impl Curve for WaveFunction {
+    fn eval_at(&self, t: f32) -> Vec3 {
+        Vec3::new(
+            -f32::sin(t * std::f32::consts::PI * 2.0) * 0.2,
+            t,
+            f32::sin(t * std::f32::consts::PI * 2.0) * 0.2
+        )
+    }
+}
+
+struct Knot {
+    rotation_winds: u32,
+    circle_winds: u32,
+}
+
+impl Curve for Knot {
+    fn eval_at(&self, mut t: f32) -> Vec3 {
+
+        t *= std::f32::consts::TAU * 2.0;
+        let cu = f32::cos(t);
+        let su = f32::sin(t);
+        let quop = self.circle_winds as f32 / self.rotation_winds as f32 * t;
+        let cs = f32::cos(quop);
+
+        Vec3::new(
+            (2.0 + cs) * 0.5 * cu,
+            (2.0 + cs) * su * 0.5,
+            f32::sin(quop) * 0.5,
+        )
+    }
+}
 
 // Spawns the actual gallery of shapes. Spawns a row for each type in z+ direction.
 fn spawn_shapes(
@@ -70,11 +105,23 @@ fn spawn_shapes(
         ..Default::default()
     });
 
+    // Small cone
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(Cone {
+            radius: 0.8,
+            height: 0.3,
+            segments: 32,
+        })),
+        material: materials.add(StandardMaterial::from(Color::DARK_GRAY)),
+        transform: Transform::from_xyz(0.0, 0.0, 9.0),
+        ..Default::default()
+    });
+
     // Textured cone
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(Cone::default())),
         material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
-        transform: Transform::from_xyz(0.0, 0.0, 9.0),
+        transform: Transform::from_xyz(0.0, 0.0, 11.0),
         ..Default::default()
     });
 
@@ -308,6 +355,77 @@ fn spawn_shapes(
             }))),
             material: materials.add(mat),
             transform: Transform::from_xyz(10.0, 0.0, 9.0),
+            ..Default::default()
+        });
+    }
+
+    // Simple tube
+    {
+        let mut mat = StandardMaterial::from(Color::WHITE);
+        mat.cull_mode = None;
+
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(Tube {
+                curve: Box::new(WaveFunction),
+                ..Default::default()
+            })),
+            material: materials.add(mat),
+            transform: Transform::from_xyz(12.0, 0.0, 5.0),
+            ..Default::default()
+        });
+    }
+
+    // Knot
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(Tube {
+            curve: Box::new(Knot {
+                rotation_winds: 2,
+                circle_winds: 3,
+            }),
+            radius: 0.1,
+            length_segments: 128,
+            ..Default::default()
+        })),
+        material: materials.add(StandardMaterial::from(checkerboard_texture.clone())),
+        transform: Transform::from_xyz(12.0, 0.0, 7.0),
+        ..Default::default()
+    });
+
+    // Line tube
+    {
+        let mut mat = StandardMaterial::from(Color::WHITE);
+        mat.cull_mode = None;
+
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(Tube {
+                curve: Box::new(Knot {
+                    rotation_winds: 2,
+                    circle_winds: 3,
+                }),
+                radius: 0.0,
+                length_segments: 128,
+                ..Default::default()
+            })),
+            material: materials.add(mat),
+            transform: Transform::from_xyz(12.0, 0.0, 9.0),
+            ..Default::default()
+        });
+    }
+
+    // Flat wave
+    {
+        let mut mat = StandardMaterial::from(checkerboard_texture.clone());
+        mat.cull_mode = None;
+
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(Tube {
+                radius: 0.2,
+                radial_segments: 1,
+                curve: Box::new(WaveFunction),
+                ..Default::default()
+            })),
+            material: materials.add(mat),
+            transform: Transform::from_xyz(12.0, 0.0, 11.0),
             ..Default::default()
         });
     }
