@@ -1,7 +1,6 @@
 use std::ops::{Deref, Sub};
-use bevy::prelude::{Mat4, Mesh, Quat, Vec2, Vec3};
+use bevy::prelude::{Mesh, Quat, Vec2, Vec3};
 use bevy::render::mesh::{Indices, PrimitiveTopology};
-use triangulate::PolygonList;
 use crate::MeshData;
 use crate::util::{Extent, FlatTrapezeIndices};
 
@@ -89,7 +88,6 @@ fn initial_normal(tangent: Vec3) -> Vec3 {
         normal = Vec3::new(0.0, 1.0, 0.0);
     }
     if tz <= min {
-        min = tz;
         normal = Vec3::new(0.0, 0.0, 1.0);
     }
 
@@ -98,9 +96,9 @@ fn initial_normal(tangent: Vec3) -> Vec3 {
 
 fn initial_frame(curve: &dyn Curve) -> FrenetSerretFrame {
 
-    let mut origin = curve.eval_at(0.0);
-    let mut tangent = curve.tangent_at(0.0);
-    let mut normal = initial_normal(tangent);
+    let origin = curve.eval_at(0.0);
+    let tangent = curve.tangent_at(0.0);
+    let normal = initial_normal(tangent);
     let v = tangent.cross(tangent.cross(normal).normalize());
 
     FrenetSerretFrame {
