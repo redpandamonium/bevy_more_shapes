@@ -5,7 +5,7 @@ use crate::MeshData;
 use crate::util::{Extent, FlatTrapezeIndices};
 
 /// A curve is some math function in 3d.
-/// It is defined at least in the domain [0, 1].
+/// It is defined and sampled in the domain [0, 1].
 /// The parameter t is the offset in that [0, 1] range which is sampled uniformly by the library to create frames.
 pub trait CurveFunction {
 
