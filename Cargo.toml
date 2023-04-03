@@ -9,6 +9,7 @@ readme = "README.md"
 keywords = ["gamedev", "graphics", "bevy", "geometry", "shapes"]
 categories = ["graphics", "game-development"]
 repository = "https://github.com/redpandamonium/bevy_more_shapes"
+exclude = ["/assets/screenshots/**"]
 
 [dependencies]
 # The parts of bevy relevant to meshes and shapes as well as math
