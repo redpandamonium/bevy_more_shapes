@@ -1,6 +1,7 @@
 // This is based on a blog post found here: http://apparat-engine.blogspot.com/2013/04/procdural-meshes-cylinder.html.
 
 use bevy::math::Vec3;
+use bevy::prelude::Vec2;
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
 use crate::MeshData;
@@ -46,9 +47,9 @@ fn add_top(mesh: &mut MeshData, cylinder: &Cylinder) {
 
     // Center
     let center_pos = Vec3::new(0.0, cylinder.height / 2.0, 0.0);
-    mesh.positions.push(center_pos.to_array());
-    mesh.uvs.push([0.5, 0.5]);
-    mesh.normals.push(Vec3::Y.to_array());
+    mesh.positions.push(center_pos);
+    mesh.uvs.push(Vec2::new(0.5, 0.5));
+    mesh.normals.push(Vec3::Y);
 
     // Vertices
     for i in 0..=cylinder.radial_segments {
@@ -62,14 +63,14 @@ fn add_top(mesh: &mut MeshData, cylinder: &Cylinder) {
             cylinder.height / 2.0,
             cylinder.radius_top * z_unit,
         );
-        let uv = [
+        let uv = Vec2::new(
             (z_unit * 0.5) + 0.5,
             (x_unit * 0.5) + 0.5,
-        ];
+        );
 
-        mesh.positions.push(pos.to_array());
+        mesh.positions.push(pos);
         mesh.uvs.push(uv);
-        mesh.normals.push(Vec3::Y.to_array())
+        mesh.normals.push(Vec3::Y)
     }
 
     // Indices
@@ -87,9 +88,9 @@ fn add_bottom(mesh: &mut MeshData, cylinder: &Cylinder) {
 
     // Center
     let center_pos = Vec3::new(0.0, -cylinder.height / 2.0, 0.0);
-    mesh.positions.push(center_pos.to_array());
-    mesh.uvs.push([0.5, 0.5]);
-    mesh.normals.push((-Vec3::Y).to_array());
+    mesh.positions.push(center_pos);
+    mesh.uvs.push(Vec2::new(0.5, 0.5));
+    mesh.normals.push(-Vec3::Y);
 
     // Vertices
     for i in 0..=cylinder.radial_segments {
@@ -103,14 +104,14 @@ fn add_bottom(mesh: &mut MeshData, cylinder: &Cylinder) {
             -cylinder.height / 2.0,
             cylinder.radius_bottom * z_unit,
         );
-        let uv = [
+        let uv = Vec2::new(
             (z_unit * 0.5) + 0.5,
             (x_unit * -0.5) + 0.5,
-        ];
+        );
 
-        mesh.positions.push(pos.to_array());
+        mesh.positions.push(pos);
         mesh.uvs.push(uv);
-        mesh.normals.push((-Vec3::Y).to_array())
+        mesh.normals.push(-Vec3::Y)
     }
 
     // Indices
@@ -143,10 +144,10 @@ fn add_body(mesh: &mut MeshData, cylinder: &Cylinder) {
             let radius = (1.0 - height_percent) * cylinder.radius_bottom + height_percent * cylinder.radius_top;
 
             let pos = Vec3::new(x_unit * radius, y, z_unit * radius);
-            let uv = [i as f32 / cylinder.radial_segments as f32, height_percent];
+            let uv = Vec2::new(i as f32 / cylinder.radial_segments as f32, height_percent);
 
-            mesh.positions.push(pos.to_array());
-            mesh.normals.push(normal.to_array());
+            mesh.positions.push(pos);
+            mesh.normals.push(normal);
             mesh.uvs.push(uv);
         }
     }

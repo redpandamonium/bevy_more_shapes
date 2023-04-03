@@ -1,4 +1,5 @@
 use bevy::math::Vec3;
+use bevy::prelude::Vec2;
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
 use crate::MeshData;
@@ -29,9 +30,9 @@ fn add_bottom(mesh: &mut MeshData, cone: &Cone) {
 
     // Center
     let center_pos = Vec3::new(0.0, -cone.height / 2.0, 0.0);
-    mesh.positions.push(center_pos.to_array());
-    mesh.uvs.push([0.5, 0.5]);
-    mesh.normals.push((-Vec3::Y).to_array());
+    mesh.positions.push(center_pos);
+    mesh.uvs.push(Vec2::new(0.5, 0.5));
+    mesh.normals.push(-Vec3::Y);
 
     // Vertices
     for i in 0..=cone.segments {
@@ -45,14 +46,14 @@ fn add_bottom(mesh: &mut MeshData, cone: &Cone) {
             -cone.height / 2.0,
             cone.radius * z_unit,
         );
-        let uv = [
+        let uv = Vec2::new(
             (z_unit * 0.5) + 0.5,
             (x_unit * -0.5) + 0.5,
-        ];
+        );
 
-        mesh.positions.push(pos.to_array());
+        mesh.positions.push(pos);
         mesh.uvs.push(uv);
-        mesh.normals.push((-Vec3::Y).to_array())
+        mesh.normals.push(-Vec3::Y)
     }
 
     // Indices
@@ -78,9 +79,9 @@ fn add_body(mesh: &mut MeshData, cone: &Cone) {
         let slope = cone.radius / cone.height;
         let normal = Vec3::new(x_unit, slope, z_unit).normalize();
 
-        mesh.positions.push([0.0, cone.height / 2.0, 0.0]);
-        mesh.normals.push(normal.to_array());
-        mesh.uvs.push([0.5, 0.5]);
+        mesh.positions.push(Vec3::new(0.0, cone.height / 2.0, 0.0));
+        mesh.normals.push(normal);
+        mesh.uvs.push(Vec2::new(0.5, 0.5));
     }
 
     // Add bottom vertices
@@ -93,17 +94,17 @@ fn add_body(mesh: &mut MeshData, cone: &Cone) {
         let slope = cone.radius / cone.height;
         let normal = Vec3::new(x_unit, slope, z_unit).normalize();
 
-        let uv = [
+        let uv = Vec2::new(
             (z_unit * 0.5) + 0.5,
             (x_unit * 0.5) + 0.5,
-        ];
+        );
 
-        mesh.positions.push([
+        mesh.positions.push(Vec3::new(
             x_unit * cone.radius,
             -cone.height / 2.0,
             z_unit * cone.radius,
-        ]);
-        mesh.normals.push(normal.to_array());
+        ));
+        mesh.normals.push(normal);
         mesh.uvs.push(uv);
     }
 

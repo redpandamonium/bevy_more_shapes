@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use bevy::prelude::Mesh;
+use bevy::prelude::{Mesh, Vec2};
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use crate::MeshData;
 use crate::util::FlatTrapezeIndices;
@@ -109,13 +109,13 @@ fn generate_torus_body(mesh: &mut MeshData, torus: &Torus) {
 
             // The normal points from the radius 0 torus to the actual point
             let normal = (position - ring_center).normalize();
-            mesh.positions.push(position.to_array());
-            mesh.normals.push(normal.to_array());
+            mesh.positions.push(position);
+            mesh.normals.push(normal);
 
             // Since the segments are basically a deformed grid, we can overlay that onto the UV space
             let u = 1.0 / torus.radial_segments as f32 * horizontal_idx as f32;
             let v = 1.0 / torus.tube_segments as f32 * vertical_idx as f32;
-            mesh.uvs.push([u, v]);
+            mesh.uvs.push(Vec2::new(u, v));
         }
     }
 
