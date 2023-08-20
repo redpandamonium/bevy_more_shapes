@@ -491,11 +491,8 @@ fn spawn_info_text(mut commands: Commands, asset_server: Res<AssetServer>) {
         style: Style {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
-            position: UiRect {
-                top: Val::Px(10.0),
-                left: Val::Px(10.0),
-                ..Default::default()
-            },
+            top: Val::Px(10.0),
+            left: Val::Px(10.0),
             ..Default::default()
         },
         text: Text::from_section(
@@ -638,8 +635,8 @@ impl Plugin for MouseLockPlugin {
         app
             // Add default config
             .insert_resource(MouseLock::default())
-            .add_system(automatic_lock_system)
-            .add_system(update_lock.in_base_set(CoreSet::PostUpdate));
+            .add_systems(Update, automatic_lock_system)
+            .add_systems(PostUpdate, update_lock);
     }
 }
 
