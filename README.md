@@ -29,6 +29,7 @@ Below is a chart which versions of this crate are compatible with which bevy ver
 | 0.3.x   | 0.9.x        |
 | 0.4.x   | 0.10.x       |
 | 0.5.x   | 0.10.x       |
+| 0.6.x   | 0.11.x       |
 
 ## Known Issues
 

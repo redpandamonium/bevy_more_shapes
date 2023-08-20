@@ -18,3 +18,7 @@ If a version is not in here, there were no breaking changes.
 * Cone segment parameter was renamed
 * Cone UVs were redone to make more sense
 * Cone normals have been fixed to account for the slope
+
+## 0.5 -> 0.6
+
+Should work out of the box with no changes.
